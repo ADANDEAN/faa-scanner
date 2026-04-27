@@ -51,88 +51,81 @@
   .scan-count span { color: var(--success); }
   main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 600px; margin: 0 auto; width: 100%; }
 
-  /* Camera */
-  .camera-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; position: relative; }
-  .section-label { font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 14px 0; }
-  #videoContainer { position: relative; background: #000; width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  #videoEl { width: 100%; height: 100%; object-fit: cover; display: none; }
-  .camera-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; text-align: center; padding: 0 20px; }
-  .cam-icon { font-size: 40px; }
-  .corners { position: absolute; inset: 16px; pointer-events: none; }
-  .corner { position: absolute; width: 20px; height: 20px; border-color: var(--accent); border-style: solid; opacity: 0.7; }
-  .corner.tl { top:0; left:0; border-width: 2px 0 0 2px; }
-  .corner.tr { top:0; right:0; border-width: 2px 2px 0 0; }
-  .corner.bl { bottom:0; left:0; border-width: 0 0 2px 2px; }
-  .corner.br { bottom:0; right:0; border-width: 0 2px 2px 0; }
-  .scan-line { position: absolute; left: 10%; right: 10%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanMove 2s ease-in-out infinite; display: none; opacity: 0.8; }
-  @keyframes scanMove { 0% { top: 15%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 85%; opacity: 0; } }
-  .camera-controls { display: flex; gap: 10px; padding: 12px 14px; }
-  #fileInput { display: none; }
-  #iosFileInput { display: none; }
+  .photo-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .section-label { font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 14px 8px; }
 
-  /* Buttons */
-  .btn { flex: 1; padding: 10px 12px; border: none; border-radius: 4px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; -webkit-appearance: none; }
-  .btn-primary { background: var(--accent); color: var(--bg); }
-  .btn-primary:active { filter: brightness(0.9); }
-  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
-  .btn-secondary:active { background: rgba(0,212,255,0.15); }
-  .btn-danger { background: var(--danger); color: #fff; width: 100%; }
-  .btn-success { background: var(--success); color: var(--bg); width: 100%; }
+  .upload-area {
+    margin: 0 14px 0;
+    border: 2px dashed var(--border);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    min-height: 160px;
+    overflow: hidden;
+  }
+  .upload-area:active { border-color: var(--accent); background: rgba(0,212,255,0.04); }
+  .upload-area.has-image { border-style: solid; border-color: var(--accent); min-height: unset; }
+  .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); padding: 30px 20px; }
+  .upload-icon { font-size: 48px; }
+  .upload-text { font-family: var(--display); font-size: 15px; letter-spacing: 1px; color: var(--accent); }
+  .upload-sub { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.6; }
+  #previewImg { width: 100%; display: none; border-radius: 4px; }
+  #previewImg.visible { display: block; }
+  #photoInput { display: none; }
 
-  /* Processing */
-  .processing-overlay { display: none; position: absolute; inset: 0; background: rgba(10,14,20,0.85); align-items: center; justify-content: center; flex-direction: column; gap: 12px; font-family: var(--display); font-size: 16px; letter-spacing: 2px; color: var(--accent); }
-  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  .photo-actions { display: flex; gap: 10px; padding: 10px 14px 14px; }
+
+  .processing-bar { display: none; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(0,212,255,0.06); border-top: 1px solid var(--border); }
+  .processing-bar.active { display: flex; }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .processing-text { font-family: var(--display); font-size: 13px; letter-spacing: 1px; color: var(--accent); }
 
-  /* Fields */
+  .btn { flex: 1; padding: 11px 12px; border: none; border-radius: 4px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; -webkit-appearance: none; text-align: center; }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:active { filter: brightness(0.85); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .btn-outline:active { background: rgba(0,212,255,0.1); }
+  .btn-danger { background: var(--danger); color: #fff; width: 100%; }
+  .btn-danger:active { filter: brightness(0.85); }
+
   .fields-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
   .fields-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
   .field-row { display: flex; flex-direction: column; gap: 4px; }
   .field-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
   .field-value {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 8px 10px;
-    font-family: var(--mono);
-    font-size: 14px;
-    color: var(--text);
-    width: 100%;
-    outline: none;
-    transition: border-color 0.15s;
-    -webkit-appearance: none;
-    appearance: none;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 3px;
+    padding: 9px 10px; font-family: var(--mono); font-size: 15px; color: var(--text);
+    width: 100%; outline: none; transition: border-color 0.15s;
+    -webkit-appearance: none; appearance: none;
   }
   .field-value:focus { border-color: var(--accent); }
   .field-value.populated { border-color: var(--success); color: var(--success); }
-  select.field-value { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300d4ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
+  select.field-value {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300d4ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer;
+  }
   select.field-value option { background: #111820; color: var(--text); }
 
-  /* Asset list */
   .assets-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
-  .assets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .asset-list { display: flex; flex-direction: column; gap: 8px; }
+  .asset-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
   .asset-item { background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 3px; padding: 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; animation: slideIn 0.2s ease; }
   @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
   .asset-info { flex: 1; }
   .asset-tag { color: var(--accent); font-size: 13px; font-weight: bold; }
-  .asset-detail { color: var(--muted); margin-top: 2px; }
-  .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; }
-  .empty-list { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; border: 1px dashed var(--border); border-radius: 4px; }
+  .asset-detail { color: var(--muted); margin-top: 3px; line-height: 1.6; }
+  .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 0 4px; line-height: 1; }
+  .empty-list { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; border: 1px dashed var(--border); border-radius: 4px; }
 
-  /* Actions */
-  .actions-section { display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px; }
-  .email-row { display: flex; flex-direction: column; gap: 4px; }
+  .actions-section { display: flex; flex-direction: column; gap: 10px; padding-bottom: 40px; }
 
-  /* EmailJS setup panel */
-  .setup-section { background: var(--surface); border: 1px solid var(--accent2); border-radius: 6px; padding: 14px; }
-  .setup-note { font-size: 11px; color: var(--accent2); margin-bottom: 10px; line-height: 1.6; }
-  .setup-note a { color: var(--accent); }
-  .setup-grid { display: flex; flex-direction: column; gap: 8px; }
-
-  /* Toast */
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--success); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: 1px; padding: 10px 20px; border-radius: 4px; transition: transform 0.3s ease; z-index: 200; white-space: nowrap; max-width: 90vw; text-align: center; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--success); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: 1px; padding: 12px 22px; border-radius: 4px; transition: transform 0.3s ease; z-index: 200; max-width: 88vw; text-align: center; }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
   canvas { display: none; }
@@ -150,43 +143,33 @@
 
 <main>
 
-  <!-- Camera -->
-  <div class="camera-section">
-    <div class="section-label">◈ CAMERA / IMAGE INPUT</div>
-    <div id="videoContainer">
-      <video id="videoEl" autoplay playsinline muted webkit-playsinline></video>
-      <div class="camera-placeholder" id="camPlaceholder">
-        <div class="cam-icon">📷</div>
-        <div>Tap START CAMERA or use Upload Photo</div>
+  <div class="photo-section">
+    <div class="section-label">◈ PHOTO INPUT</div>
+    <label class="upload-area" id="uploadArea" for="photoInput">
+      <div class="upload-placeholder" id="uploadPlaceholder">
+        <div class="upload-icon">📸</div>
+        <div class="upload-text">TAP TO TAKE / UPLOAD PHOTO</div>
+        <div class="upload-sub">Take a photo of the label or FAA sticker<br>Best results in good lighting, label fills frame</div>
       </div>
-      <div class="corners">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
-      </div>
-      <div class="scan-line" id="scanLine"></div>
-      <div class="processing-overlay" id="processingOverlay">
-        <div class="spinner"></div>
-        <div>ANALYZING...</div>
-      </div>
+      <img id="previewImg" alt="Label preview" />
+      <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+    </label>
+    <div class="processing-bar" id="processingBar">
+      <div class="spinner"></div>
+      <div class="processing-text">READING LABEL — PLEASE WAIT...</div>
     </div>
-    <div class="camera-controls">
-      <button class="btn btn-primary" id="startCamBtn" onclick="startCamera()">▶ Start Camera</button>
-      <button class="btn btn-secondary" id="captureBtn" onclick="captureFrame()" disabled>⊙ Capture</button>
-      <!-- iOS-friendly file input: capture="environment" triggers rear camera directly -->
-      <label class="btn btn-secondary" style="text-align:center;line-height:2;display:flex;align-items:center;justify-content:center;">
-        ↑ Photo
-        <input type="file" id="iosFileInput" accept="image/*" capture="environment" onchange="handleFileUpload(event)">
-      </label>
+    <div class="photo-actions">
+      <label class="btn btn-outline" for="photoInput" style="display:flex;align-items:center;justify-content:center;">↺ RETAKE</label>
+      <button class="btn btn-primary" id="analyzeBtn" onclick="reanalyze()" disabled>⊙ RE-EXTRACT</button>
     </div>
   </div>
 
-  <!-- Extracted Fields -->
   <div class="fields-section">
     <div class="section-label">◈ EXTRACTED DATA</div>
     <div class="fields-grid">
       <div class="field-row">
-        <div class="field-label">Asset Tag (Property of FAA #)</div>
-        <input class="field-value" id="fieldAssetTag" placeholder="—" />
+        <div class="field-label">Asset Tag — Property of FAA #</div>
+        <input class="field-value" id="fieldAssetTag" placeholder="e.g. 117521" />
       </div>
       <div class="field-row">
         <div class="field-label">Part No / Model</div>
@@ -198,29 +181,23 @@
       </div>
       <div class="field-row">
         <div class="field-label">Serial No</div>
-        <input class="field-value" id="fieldSerial" placeholder="—" />
+        <input class="field-value" id="fieldSerial" placeholder="e.g. 82162523700767" />
       </div>
     </div>
     <div style="margin-top:12px;">
-      <button class="btn btn-primary" style="width:100%" onclick="addAsset()" id="addBtn" disabled>+ ADD TO LIST</button>
+      <button class="btn btn-primary" onclick="addAsset()" id="addBtn" disabled>+ ADD TO LIST</button>
     </div>
   </div>
 
-  <!-- Asset List -->
   <div class="assets-section">
-    <div class="assets-header">
-      <div class="section-label" style="padding:0">◈ SCAN LIST</div>
-    </div>
+    <div class="section-label" style="padding:0 0 8px;">◈ SCAN LIST</div>
     <div class="asset-list" id="assetList">
-      <div class="empty-list">No assets scanned yet</div>
+      <div class="empty-list">No assets added yet</div>
     </div>
   </div>
 
-  <!-- Send -->
   <div class="actions-section">
-    <button class="btn btn-danger" onclick="finishAndSend()" id="endBtn">
-      ■ END SESSION &amp; SEND CSV
-    </button>
+    <button class="btn btn-danger" onclick="finishAndSend()">■ END SESSION &amp; SEND CSV</button>
   </div>
 
 </main>
@@ -229,17 +206,19 @@
 <div class="toast" id="toast"></div>
 
 <script>
-let stream = null;
 let assets = [];
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+let currentDataUrl = null;
 
-const video = document.getElementById('videoEl');
-const captureBtn = document.getElementById('captureBtn');
-const startCamBtn = document.getElementById('startCamBtn');
-const processingOverlay = document.getElementById('processingOverlay');
-const scanLine = document.getElementById('scanLine');
-const camPlaceholder = document.getElementById('camPlaceholder');
+const analyzeBtn = document.getElementById('analyzeBtn');
 const addBtn = document.getElementById('addBtn');
+const processingBar = document.getElementById('processingBar');
+
+const EJS_PUBLIC_KEY  = '0ICfn2KzfPvExfqhT';
+const EJS_SERVICE_ID  = 'FAA SCANNER';
+const EJS_TEMPLATE_ID = 'template_8scskqp';
+const RECIPIENT_EMAIL = 'adanahz55@gmail.com';
+
+emailjs.init(EJS_PUBLIC_KEY);
 
 function showToast(msg, color) {
   const t = document.getElementById('toast');
@@ -247,65 +226,12 @@ function showToast(msg, color) {
   t.style.background = color || 'var(--success)';
   t.style.color = (color === 'var(--danger)' || color === 'var(--accent2)') ? '#fff' : 'var(--bg)';
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-async function startCamera() {
-  // iOS Safari requires specific constraints
-  const constraints = {
-    video: {
-      facingMode: { ideal: 'environment' },
-      width: { ideal: 1920 },
-      height: { ideal: 1440 }
-    }
-  };
-
-  try {
-    // Stop any existing stream first
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
-    }
-    stream = await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject = stream;
-
-    // iOS requires explicit play() call
-    await video.play();
-
-    video.style.display = 'block';
-    camPlaceholder.style.display = 'none';
-    scanLine.style.display = 'block';
-    captureBtn.disabled = false;
-    startCamBtn.textContent = '◉ Camera On';
-    startCamBtn.style.background = 'var(--success)';
-    startCamBtn.style.color = 'var(--bg)';
-  } catch(e) {
-    console.error('Camera error:', e);
-    if (e.name === 'NotAllowedError') {
-      showToast('Allow camera access in Settings → Safari', 'var(--accent2)');
-    } else if (e.name === 'NotFoundError') {
-      showToast('No camera found — use Photo button', 'var(--accent2)');
-    } else {
-      showToast('Camera error — use Photo button instead', 'var(--accent2)');
-    }
-  }
-}
-
-function captureFrame() {
-  if (!video.videoWidth) {
-    showToast('Camera not ready yet', 'var(--accent2)');
-    return;
-  }
-  const canvas = document.getElementById('captureCanvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  analyzeImage(canvas.toDataURL('image/jpeg', 0.9));
-}
-
-function handleFileUpload(e) {
+function handlePhoto(e) {
   const file = e.target.files[0];
   if (!file) return;
-  // Resize large iPhone photos before sending to API
   const reader = new FileReader();
   reader.onload = ev => {
     const img = new Image();
@@ -319,7 +245,17 @@ function handleFileUpload(e) {
       }
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      analyzeImage(canvas.toDataURL('image/jpeg', 0.95));
+      currentDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+      const preview = document.getElementById('previewImg');
+      const placeholder = document.getElementById('uploadPlaceholder');
+      const uploadArea = document.getElementById('uploadArea');
+      preview.src = currentDataUrl;
+      preview.classList.add('visible');
+      placeholder.style.display = 'none';
+      uploadArea.classList.add('has-image');
+
+      analyzeImage(currentDataUrl);
     };
     img.src = ev.target.result;
   };
@@ -327,8 +263,15 @@ function handleFileUpload(e) {
   e.target.value = '';
 }
 
+function reanalyze() {
+  if (currentDataUrl) analyzeImage(currentDataUrl);
+}
+
 async function analyzeImage(dataUrl) {
-  processingOverlay.style.display = 'flex';
+  processingBar.classList.add('active');
+  analyzeBtn.disabled = true;
+  addBtn.disabled = true;
+
   const base64 = dataUrl.split(',')[1];
   const mediaType = dataUrl.split(';')[0].split(':')[1];
 
@@ -338,32 +281,47 @@ async function analyzeImage(dataUrl) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 400,
+        max_tokens: 500,
         messages: [{
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: 'You are reading labels on FAA equipment. Extract exactly two values:\n\n1. ASSET TAG: Look for a small white rectangular sticker that has the M.C. DEAN logo at the top, the words "Property of FAA" in the middle, and a NUMBER printed in large font directly below those words. That number (typically 6 digits, e.g. 117521) is the asset_tag. Read ONLY the number that appears directly beneath the words "Property of FAA". Do NOT use any number from the blue label. If no white FAA sticker is visible in the image, return null.\n\n2. SERIAL NUMBER: Look at the blue or teal M.C. Dean equipment label. Scan down the left column for a row labeled exactly "Serial No". Read the value to the right of that label with extreme care, digit by digit. It is a long numeric string (e.g. 82162523700767). Do NOT use the large barcode number at the bottom of the blue label. Do NOT use the PO No value. ONLY the value on the row labeled "Serial No". If not visible return null.\n\nReturn ONLY this JSON, no markdown, no explanation:\n{\n  "asset_tag": "<number directly under Property of FAA text, or null>",\n  "serial": "<number from Serial No row only, or null>"\n}' }
+            { type: 'text', text: 'You are extracting data from a photo of M.C. Dean FAA equipment labels. Carefully examine the entire image and extract these two values:\n\nFIELD 1 - asset_tag:\nLook for a small WHITE rectangular sticker/label that contains:\n- "M.C. DEAN" logo at the top\n- Text that says "Property of FAA"\n- A NUMBER in LARGE BOLD font directly below "Property of FAA" (typically 6 digits, examples: 117520, 117521, 117522)\nReturn that large bold number as asset_tag. If no such white sticker is visible, return null.\n\nFIELD 2 - serial:\nLook for a BLUE or TEAL colored M.C. Dean label with multiple rows of labeled fields. Find the specific row where the label on the left reads "Serial No" and carefully read the number on the right side of that row digit by digit. This is typically 14 digits long (example: 82162523700767).\nCRITICAL: Do NOT return the barcode number printed below the barcode at the bottom of the blue label. Do NOT return the PO No. ONLY return what is on the "Serial No" row.\nIf Serial No says N/A or is not visible, return null.\n\nRespond with ONLY this JSON, nothing else:\n{"asset_tag": "<number or null>", "serial": "<number or null>"}' }
           ]
         }]
       })
     });
 
     const data = await resp.json();
-    const text = data.content?.find(b => b.type === 'text')?.text || '{}';
-    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    const rawText = data.content?.find(b => b.type === 'text')?.text || '{}';
+    const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
 
-    if (parsed.asset_tag) setFieldGreen('fieldAssetTag', parsed.asset_tag);
-    if (parsed.serial) setFieldGreen('fieldSerial', parsed.serial);
+    let extracted = 0;
+    if (parsed.asset_tag && parsed.asset_tag !== 'null' && parsed.asset_tag !== null) {
+      setFieldGreen('fieldAssetTag', String(parsed.asset_tag));
+      extracted++;
+    }
+    if (parsed.serial && parsed.serial !== 'null' && parsed.serial !== null) {
+      setFieldGreen('fieldSerial', String(parsed.serial));
+      extracted++;
+    }
 
+    analyzeBtn.disabled = false;
     addBtn.disabled = false;
-    showToast('✓ Data extracted — select model below');
+
+    if (extracted === 0) {
+      showToast('No data found — retake photo or fill manually', 'var(--accent2)');
+    } else {
+      showToast('✓ ' + extracted + ' field' + (extracted > 1 ? 's' : '') + ' extracted — select model');
+    }
+
   } catch(err) {
-    console.error(err);
-    showToast('Extraction failed — fill in manually', 'var(--accent2)');
+    console.error('Extraction error:', err);
+    showToast('Extraction failed — fill in manually', 'var(--danger)');
+    analyzeBtn.disabled = false;
     addBtn.disabled = false;
   } finally {
-    processingOverlay.style.display = 'none';
+    processingBar.classList.remove('active');
   }
 }
 
@@ -377,21 +335,28 @@ function clearFields() {
   ['fieldAssetTag', 'fieldSerial'].forEach(id => setFieldGreen(id, null));
   document.getElementById('fieldModel').value = '';
   addBtn.disabled = true;
+  analyzeBtn.disabled = true;
+  const preview = document.getElementById('previewImg');
+  const placeholder = document.getElementById('uploadPlaceholder');
+  const uploadArea = document.getElementById('uploadArea');
+  preview.src = '';
+  preview.classList.remove('visible');
+  placeholder.style.display = 'flex';
+  uploadArea.classList.remove('has-image');
+  currentDataUrl = null;
 }
 
 function addAsset() {
   const tag = document.getElementById('fieldAssetTag').value.trim();
   const model = document.getElementById('fieldModel').value.trim();
   const serial = document.getElementById('fieldSerial').value.trim();
-
-  if (!tag && !model && !serial) { showToast('Nothing to add', 'var(--accent2)'); return; }
   if (!model) { showToast('Please select a model', 'var(--accent2)'); return; }
-
+  if (!tag && !serial) { showToast('Need at least a tag or serial number', 'var(--accent2)'); return; }
   assets.push({ tag, model, serial });
   renderList();
   clearFields();
   document.getElementById('countDisplay').textContent = assets.length;
-  showToast('Asset ' + (tag || model) + ' added ✓');
+  showToast('✓ Asset ' + (tag || serial) + ' added');
 }
 
 function removeAsset(i) {
@@ -402,12 +367,12 @@ function removeAsset(i) {
 
 function renderList() {
   const list = document.getElementById('assetList');
-  if (assets.length === 0) { list.innerHTML = '<div class="empty-list">No assets scanned yet</div>'; return; }
+  if (assets.length === 0) { list.innerHTML = '<div class="empty-list">No assets added yet</div>'; return; }
   list.innerHTML = assets.map((a, i) => `
     <div class="asset-item">
       <div class="asset-info">
         <div class="asset-tag">TAG: ${a.tag || '—'}</div>
-        <div class="asset-detail">MODEL: ${a.model || '—'} | S/N: ${a.serial || '—'}</div>
+        <div class="asset-detail">MODEL: ${a.model || '—'}<br>S/N: ${a.serial || '—'}</div>
       </div>
       <button class="remove-btn" onclick="removeAsset(${i})">✕</button>
     </div>`).join('');
@@ -435,33 +400,22 @@ function downloadCSV(csv) {
   URL.revokeObjectURL(url);
 }
 
-const EJS_PUBLIC_KEY  = '0ICfn2KzfPvExfqhT';
-const EJS_SERVICE_ID  = 'FAA SCANNER';
-const EJS_TEMPLATE_ID = 'template_8scskqp';
-const RECIPIENT_EMAIL = 'adanahz55@gmail.com';
-
-emailjs.init(EJS_PUBLIC_KEY);
-
 async function finishAndSend() {
-  if (assets.length === 0) { showToast('No assets scanned yet', 'var(--accent2)'); return; }
-
+  if (assets.length === 0) { showToast('No assets added yet', 'var(--accent2)'); return; }
   const csv = buildCSV();
-
-  // Always download the CSV locally first
   downloadCSV(csv);
-
   showToast('Sending email...', 'var(--accent)');
   try {
     await emailjs.send(EJS_SERVICE_ID, EJS_TEMPLATE_ID, {
       to_email: RECIPIENT_EMAIL,
       subject: 'FAA Asset Import - ' + assets.length + ' Assets - ' + new Date().toLocaleDateString(),
-      message: 'Assets scanned: ' + assets.length + '\nDate: ' + new Date().toLocaleString() + '\n\n--- ASSET LIST ---\n' + assets.map(a => 'Tag: ' + a.tag + ' | Model: ' + a.model + ' | S/N: ' + a.serial).join('\n'),
+      message: 'Assets captured: ' + assets.length + '\nDate: ' + new Date().toLocaleString() + '\n\n--- ASSET LIST ---\n' + assets.map(a => 'Tag: ' + a.tag + ' | Model: ' + a.model + ' | S/N: ' + a.serial).join('\n'),
       csv_data: csv
     });
     showToast('✓ Email sent & CSV downloaded!');
   } catch(err) {
     console.error('EmailJS error:', err);
-    showToast('Email failed — CSV still downloaded to device', 'var(--danger)');
+    showToast('Email failed — CSV downloaded to device', 'var(--danger)');
   }
 }
 </script>
