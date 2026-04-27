@@ -352,6 +352,15 @@ async function analyzeImage(dataUrl) {
       return;
     }
 
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      const msg = errData?.error?.message || 'HTTP ' + resp.status;
+      showToast('API Error: ' + msg.slice(0,60), 'var(--danger)');
+      analyzeBtn.disabled = false;
+      addBtn.disabled = false;
+      processingBar.classList.remove('active');
+      return;
+    }
     const data = await resp.json();
     const rawText = data.content?.find(b => b.type === 'text')?.text || '{}';
     const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
@@ -377,7 +386,7 @@ async function analyzeImage(dataUrl) {
 
   } catch(err) {
     console.error('Extraction error:', err);
-    showToast('Extraction failed — check connection & retry', 'var(--danger)');
+    showToast('ERROR: ' + (err.message || err.name || 'unknown'), 'var(--danger)');
     analyzeBtn.disabled = false;
     addBtn.disabled = false;
   } finally {
