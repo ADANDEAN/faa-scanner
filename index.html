@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FAA Asset Scanner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
     --bg: #0a0e14;
@@ -20,9 +21,7 @@
     --mono: 'Share Tech Mono', monospace;
     --display: 'Barlow Condensed', sans-serif;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     background: var(--bg);
     color: var(--text);
@@ -31,8 +30,8 @@
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
   }
-
   .header {
     background: var(--surface);
     border-bottom: 2px solid var(--accent);
@@ -45,181 +44,52 @@
     z-index: 100;
   }
   .header-left { display: flex; align-items: center; gap: 10px; }
-  .logo {
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: 22px;
-    color: var(--accent);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
+  .logo { font-family: var(--display); font-weight: 900; font-size: 22px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
   .logo span { color: var(--accent2); }
-  .badge {
-    background: var(--accent);
-    color: var(--bg);
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 10px;
-    padding: 2px 7px;
-    border-radius: 2px;
-    letter-spacing: 1px;
-  }
+  .badge { background: var(--accent); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 10px; padding: 2px 7px; border-radius: 2px; letter-spacing: 1px; }
   .scan-count { font-size: 12px; color: var(--muted); }
   .scan-count span { color: var(--success); }
+  main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 600px; margin: 0 auto; width: 100%; }
 
-  main {
-    flex: 1;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    max-width: 600px;
-    margin: 0 auto;
-    width: 100%;
-  }
-
-  .camera-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    position: relative;
-  }
-  .section-label {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 10px 14px 0;
-  }
-
-  #videoContainer {
-    position: relative;
-    background: #000;
-    width: 100%;
-    aspect-ratio: 4/3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-  #videoEl {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: none;
-  }
-  .camera-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-    font-size: 13px;
-  }
+  /* Camera */
+  .camera-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; position: relative; }
+  .section-label { font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 14px 0; }
+  #videoContainer { position: relative; background: #000; width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #videoEl { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .camera-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; text-align: center; padding: 0 20px; }
   .cam-icon { font-size: 40px; }
-
   .corners { position: absolute; inset: 16px; pointer-events: none; }
-  .corner {
-    position: absolute;
-    width: 20px; height: 20px;
-    border-color: var(--accent);
-    border-style: solid;
-    opacity: 0.7;
-  }
+  .corner { position: absolute; width: 20px; height: 20px; border-color: var(--accent); border-style: solid; opacity: 0.7; }
   .corner.tl { top:0; left:0; border-width: 2px 0 0 2px; }
   .corner.tr { top:0; right:0; border-width: 2px 2px 0 0; }
   .corner.bl { bottom:0; left:0; border-width: 0 0 2px 2px; }
   .corner.br { bottom:0; right:0; border-width: 0 2px 2px 0; }
-
-  .scan-line {
-    position: absolute;
-    left: 10%; right: 10%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    animation: scanMove 2s ease-in-out infinite;
-    display: none;
-    opacity: 0.8;
-  }
-  @keyframes scanMove {
-    0% { top: 15%; opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { top: 85%; opacity: 0; }
-  }
-
-  .camera-controls {
-    display: flex;
-    gap: 10px;
-    padding: 12px 14px;
-  }
-
+  .scan-line { position: absolute; left: 10%; right: 10%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanMove 2s ease-in-out infinite; display: none; opacity: 0.8; }
+  @keyframes scanMove { 0% { top: 15%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 85%; opacity: 0; } }
+  .camera-controls { display: flex; gap: 10px; padding: 12px 14px; }
   #fileInput { display: none; }
+  #iosFileInput { display: none; }
 
-  .btn {
-    flex: 1;
-    padding: 10px 12px;
-    border: none;
-    border-radius: 4px;
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
+  /* Buttons */
+  .btn { flex: 1; padding: 10px 12px; border: none; border-radius: 4px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; -webkit-appearance: none; }
   .btn-primary { background: var(--accent); color: var(--bg); }
-  .btn-primary:hover { filter: brightness(1.15); }
+  .btn-primary:active { filter: brightness(0.9); }
   .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-secondary {
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-  }
-  .btn-secondary:hover { background: rgba(0,212,255,0.08); }
+  .btn-secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .btn-secondary:active { background: rgba(0,212,255,0.15); }
   .btn-danger { background: var(--danger); color: #fff; width: 100%; }
-  .btn-danger:hover { filter: brightness(1.1); }
+  .btn-success { background: var(--success); color: var(--bg); width: 100%; }
 
-  .processing-overlay {
-    display: none;
-    position: absolute;
-    inset: 0;
-    background: rgba(10,14,20,0.85);
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 12px;
-    font-family: var(--display);
-    font-size: 16px;
-    letter-spacing: 2px;
-    color: var(--accent);
-  }
-  .spinner {
-    width: 36px; height: 36px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
+  /* Processing */
+  .processing-overlay { display: none; position: absolute; inset: 0; background: rgba(10,14,20,0.85); align-items: center; justify-content: center; flex-direction: column; gap: 12px; font-family: var(--display); font-size: 16px; letter-spacing: 2px; color: var(--accent); }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .fields-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px;
-  }
+  /* Fields */
+  .fields-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
   .fields-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
   .field-row { display: flex; flex-direction: column; gap: 4px; }
-  .field-label {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-  }
+  .field-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
   .field-value {
     background: var(--bg);
     border: 1px solid var(--border);
@@ -231,88 +101,38 @@
     width: 100%;
     outline: none;
     transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
   }
   .field-value:focus { border-color: var(--accent); }
   .field-value.populated { border-color: var(--success); color: var(--success); }
+  select.field-value { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300d4ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
+  select.field-value option { background: #111820; color: var(--text); }
 
-  .assets-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px;
-  }
-  .assets-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
+  /* Asset list */
+  .assets-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
+  .assets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .asset-list { display: flex; flex-direction: column; gap: 8px; }
-  .asset-item {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: 3px;
-    padding: 10px;
-    font-size: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 8px;
-    animation: slideIn 0.2s ease;
-  }
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-8px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
+  .asset-item { background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 3px; padding: 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; animation: slideIn 0.2s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
   .asset-info { flex: 1; }
   .asset-tag { color: var(--accent); font-size: 13px; font-weight: bold; }
   .asset-detail { color: var(--muted); margin-top: 2px; }
-  .remove-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 16px;
-    padding: 0 4px;
-    line-height: 1;
-  }
-  .remove-btn:hover { color: var(--danger); }
+  .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; }
+  .empty-list { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; border: 1px dashed var(--border); border-radius: 4px; }
 
-  .empty-list {
-    text-align: center;
-    color: var(--muted);
-    font-size: 12px;
-    padding: 20px;
-    border: 1px dashed var(--border);
-    border-radius: 4px;
-  }
-
-  .actions-section {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-bottom: 30px;
-  }
+  /* Actions */
+  .actions-section { display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px; }
   .email-row { display: flex; flex-direction: column; gap: 4px; }
 
-  .toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(60px);
-    background: var(--success);
-    color: var(--bg);
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 1px;
-    padding: 10px 20px;
-    border-radius: 4px;
-    transition: transform 0.3s ease;
-    z-index: 200;
-    white-space: nowrap;
-  }
+  /* EmailJS setup panel */
+  .setup-section { background: var(--surface); border: 1px solid var(--accent2); border-radius: 6px; padding: 14px; }
+  .setup-note { font-size: 11px; color: var(--accent2); margin-bottom: 10px; line-height: 1.6; }
+  .setup-note a { color: var(--accent); }
+  .setup-grid { display: flex; flex-direction: column; gap: 8px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--success); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: 1px; padding: 10px 20px; border-radius: 4px; transition: transform 0.3s ease; z-index: 200; white-space: nowrap; max-width: 90vw; text-align: center; }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
   canvas { display: none; }
@@ -330,19 +150,18 @@
 
 <main>
 
+  <!-- Camera -->
   <div class="camera-section">
     <div class="section-label">◈ CAMERA / IMAGE INPUT</div>
     <div id="videoContainer">
-      <video id="videoEl" autoplay playsinline muted></video>
+      <video id="videoEl" autoplay playsinline muted webkit-playsinline></video>
       <div class="camera-placeholder" id="camPlaceholder">
         <div class="cam-icon">📷</div>
-        <div>Tap START CAMERA or upload image</div>
+        <div>Tap START CAMERA or use Upload Photo</div>
       </div>
       <div class="corners">
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
       </div>
       <div class="scan-line" id="scanLine"></div>
       <div class="processing-overlay" id="processingOverlay">
@@ -353,13 +172,15 @@
     <div class="camera-controls">
       <button class="btn btn-primary" id="startCamBtn" onclick="startCamera()">▶ Start Camera</button>
       <button class="btn btn-secondary" id="captureBtn" onclick="captureFrame()" disabled>⊙ Capture</button>
-      <label class="btn btn-secondary" style="text-align:center;line-height:2;">
-        ↑ Upload
-        <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
+      <!-- iOS-friendly file input: capture="environment" triggers rear camera directly -->
+      <label class="btn btn-secondary" style="text-align:center;line-height:2;display:flex;align-items:center;justify-content:center;">
+        ↑ Photo
+        <input type="file" id="iosFileInput" accept="image/*" capture="environment" onchange="handleFileUpload(event)">
       </label>
     </div>
   </div>
 
+  <!-- Extracted Fields -->
   <div class="fields-section">
     <div class="section-label">◈ EXTRACTED DATA</div>
     <div class="fields-grid">
@@ -369,7 +190,11 @@
       </div>
       <div class="field-row">
         <div class="field-label">Part No / Model</div>
-        <input class="field-value" id="fieldModel" placeholder="—" />
+        <select class="field-value" id="fieldModel">
+          <option value="">— Select Model —</option>
+          <option value="'UTR-9202ABTRLNL">'UTR-9202ABTRLNL</option>
+          <option value="'LNL-1320-S3">'LNL-1320-S3</option>
+        </select>
       </div>
       <div class="field-row">
         <div class="field-label">Serial No</div>
@@ -381,21 +206,19 @@
     </div>
   </div>
 
+  <!-- Asset List -->
   <div class="assets-section">
     <div class="assets-header">
       <div class="section-label" style="padding:0">◈ SCAN LIST</div>
     </div>
     <div class="asset-list" id="assetList">
-      <div class="empty-list" id="emptyMsg">No assets scanned yet</div>
+      <div class="empty-list">No assets scanned yet</div>
     </div>
   </div>
 
+  <!-- Send -->
   <div class="actions-section">
-    <div class="email-row">
-      <div class="field-label">◈ SEND CSV TO EMAIL</div>
-      <input class="field-value" id="emailInput" type="email" placeholder="recipient@example.com" style="font-size:14px;" />
-    </div>
-    <button class="btn btn-danger" onclick="finishAndSend()">
+    <button class="btn btn-danger" onclick="finishAndSend()" id="endBtn">
       ■ END SESSION &amp; SEND CSV
     </button>
   </div>
@@ -408,6 +231,7 @@
 <script>
 let stream = null;
 let assets = [];
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 const video = document.getElementById('videoEl');
 const captureBtn = document.getElementById('captureBtn');
@@ -421,17 +245,32 @@ function showToast(msg, color) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.style.background = color || 'var(--success)';
-  t.style.color = color ? '#fff' : 'var(--bg)';
+  t.style.color = (color === 'var(--danger)' || color === 'var(--accent2)') ? '#fff' : 'var(--bg)';
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 async function startCamera() {
+  // iOS Safari requires specific constraints
+  const constraints = {
+    video: {
+      facingMode: { ideal: 'environment' },
+      width: { ideal: 1920 },
+      height: { ideal: 1440 }
+    }
+  };
+
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
+    // Stop any existing stream first
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+    }
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = stream;
+
+    // iOS requires explicit play() call
+    await video.play();
+
     video.style.display = 'block';
     camPlaceholder.style.display = 'none';
     scanLine.style.display = 'block';
@@ -440,24 +279,50 @@ async function startCamera() {
     startCamBtn.style.background = 'var(--success)';
     startCamBtn.style.color = 'var(--bg)';
   } catch(e) {
-    showToast('Camera unavailable — use Upload', 'var(--accent2)');
+    console.error('Camera error:', e);
+    if (e.name === 'NotAllowedError') {
+      showToast('Allow camera access in Settings → Safari', 'var(--accent2)');
+    } else if (e.name === 'NotFoundError') {
+      showToast('No camera found — use Photo button', 'var(--accent2)');
+    } else {
+      showToast('Camera error — use Photo button instead', 'var(--accent2)');
+    }
   }
 }
 
 function captureFrame() {
+  if (!video.videoWidth) {
+    showToast('Camera not ready yet', 'var(--accent2)');
+    return;
+  }
   const canvas = document.getElementById('captureCanvas');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  analyzeImage(dataUrl);
+  analyzeImage(canvas.toDataURL('image/jpeg', 0.9));
 }
 
 function handleFileUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
+  // Resize large iPhone photos before sending to API
   const reader = new FileReader();
-  reader.onload = ev => analyzeImage(ev.target.result);
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById('captureCanvas');
+      const MAX = 1600;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      analyzeImage(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.src = ev.target.result;
+  };
   reader.readAsDataURL(file);
   e.target.value = '';
 }
@@ -477,20 +342,8 @@ async function analyzeImage(dataUrl) {
         messages: [{
           role: 'user',
           content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mediaType, data: base64 }
-            },
-            {
-              type: 'text',
-              text: `Extract these fields from the label/image. Return ONLY valid JSON, no markdown, no extra text:
-{
-  "asset_tag": "<the number under 'Property of FAA' on asset tag labels, OR the Asset Tag field value, or null>",
-  "model": "<Part No or model number, e.g. UTR-9216ABTRLNL, or null>",
-  "serial": "<Serial No value, or null>"
-}
-If a field is not visible or not applicable, use null.`
-            }
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: 'Extract these fields from the M.C. Dean label or FAA asset tag sticker. Return ONLY valid JSON, no markdown, no extra text:\n{\n  "asset_tag": "<number printed under the words Property of FAA on white sticker labels, or the Asset Tag field value on blue M.C.Dean labels, or null if not found>",\n  "serial": "<Serial No field value, or null if not found>"\n}\nIf a field is not visible use null. Do not guess.' }
           ]
         }]
       })
@@ -498,31 +351,31 @@ If a field is not visible or not applicable, use null.`
 
     const data = await resp.json();
     const text = data.content?.find(b => b.type === 'text')?.text || '{}';
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
 
-    setField('fieldAssetTag', parsed.asset_tag);
-    setField('fieldModel', parsed.model);
-    setField('fieldSerial', parsed.serial);
+    if (parsed.asset_tag) setFieldGreen('fieldAssetTag', parsed.asset_tag);
+    if (parsed.serial) setFieldGreen('fieldSerial', parsed.serial);
 
     addBtn.disabled = false;
-    showToast('✓ Data extracted');
+    showToast('✓ Data extracted — select model below');
   } catch(err) {
-    showToast('Extraction failed — edit manually', 'var(--accent2)');
+    console.error(err);
+    showToast('Extraction failed — fill in manually', 'var(--accent2)');
     addBtn.disabled = false;
   } finally {
     processingOverlay.style.display = 'none';
   }
 }
 
-function setField(id, val) {
+function setFieldGreen(id, val) {
   const el = document.getElementById(id);
   el.value = val || '';
   el.classList.toggle('populated', !!val);
 }
 
 function clearFields() {
-  ['fieldAssetTag','fieldModel','fieldSerial'].forEach(id => setField(id, null));
+  ['fieldAssetTag', 'fieldSerial'].forEach(id => setFieldGreen(id, null));
+  document.getElementById('fieldModel').value = '';
   addBtn.disabled = true;
 }
 
@@ -531,16 +384,14 @@ function addAsset() {
   const model = document.getElementById('fieldModel').value.trim();
   const serial = document.getElementById('fieldSerial').value.trim();
 
-  if (!tag && !model && !serial) {
-    showToast('Nothing to add', 'var(--accent2)');
-    return;
-  }
+  if (!tag && !model && !serial) { showToast('Nothing to add', 'var(--accent2)'); return; }
+  if (!model) { showToast('Please select a model', 'var(--accent2)'); return; }
 
   assets.push({ tag, model, serial });
   renderList();
   clearFields();
   document.getElementById('countDisplay').textContent = assets.length;
-  showToast(`Asset ${tag || model} added`);
+  showToast('Asset ' + (tag || model) + ' added ✓');
 }
 
 function removeAsset(i) {
@@ -551,10 +402,7 @@ function removeAsset(i) {
 
 function renderList() {
   const list = document.getElementById('assetList');
-  if (assets.length === 0) {
-    list.innerHTML = '<div class="empty-list">No assets scanned yet</div>';
-    return;
-  }
+  if (assets.length === 0) { list.innerHTML = '<div class="empty-list">No assets scanned yet</div>'; return; }
   list.innerHTML = assets.map((a, i) => `
     <div class="asset-item">
       <div class="asset-info">
@@ -562,50 +410,60 @@ function renderList() {
         <div class="asset-detail">MODEL: ${a.model || '—'} | S/N: ${a.serial || '—'}</div>
       </div>
       <button class="remove-btn" onclick="removeAsset(${i})">✕</button>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 function buildCSV() {
   const headers = ['Action','Name','Asset Tag','Manufacturer','Serial #','Model','Location','Status','Condition'];
   const rows = assets.map(a => {
-    const name = `LENEL ${a.model || ''} Tag: ${a.tag || ''}`.trim();
-    return [
-      'CREATE', name, a.tag || '', 'LENEL', a.serial || '',
-      a.model || '', 'Tysons HQ - 12th Floor Lab', 'Reserved', 'A1'
-    ].map(v => `"${v}"`).join(',');
+    const name = ('LENEL ' + (a.model || '') + ' Tag: ' + (a.tag || '')).trim();
+    return ['CREATE', name, a.tag||'', 'LENEL', a.serial||'', a.model||'', 'Tysons HQ - 12th Floor Lab', 'Reserved', 'A1']
+      .map(v => '"' + v + '"').join(',');
   });
   return [headers.join(','), ...rows].join('\n');
 }
 
-function finishAndSend() {
-  if (assets.length === 0) {
-    showToast('No assets scanned yet', 'var(--accent2)');
-    return;
-  }
-
-  const email = document.getElementById('emailInput').value.trim();
-  const csv = buildCSV();
-
-  // Download CSV
+function downloadCSV(csv) {
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `FAA_Assets_Import_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = 'FAA_Assets_Import_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
 
-  // Open mailto if email provided
-  if (email) {
-    const subject = encodeURIComponent(`FAA Asset Import - ${assets.length} Assets - ${new Date().toLocaleDateString()}`);
-    const body = encodeURIComponent(`Please find the attached FAA Asset Import CSV.\n\nAssets scanned: ${assets.length}\nDate: ${new Date().toLocaleString()}\n\nNote: CSV has been downloaded to your device. Please attach it to this email.\n\n--- ASSET LIST ---\n${assets.map(a => `Tag: ${a.tag} | Model: ${a.model} | S/N: ${a.serial}`).join('\n')}`);
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+const EJS_PUBLIC_KEY  = '0ICfn2KzfPvExfqhT';
+const EJS_SERVICE_ID  = 'FAA SCANNER';
+const EJS_TEMPLATE_ID = 'template_8scskqp';
+const RECIPIENT_EMAIL = 'adanahz55@gmail.com';
+
+emailjs.init(EJS_PUBLIC_KEY);
+
+async function finishAndSend() {
+  if (assets.length === 0) { showToast('No assets scanned yet', 'var(--accent2)'); return; }
+
+  const csv = buildCSV();
+
+  // Always download the CSV locally first
+  downloadCSV(csv);
+
+  showToast('Sending email...', 'var(--accent)');
+  try {
+    await emailjs.send(EJS_SERVICE_ID, EJS_TEMPLATE_ID, {
+      to_email: RECIPIENT_EMAIL,
+      subject: 'FAA Asset Import - ' + assets.length + ' Assets - ' + new Date().toLocaleDateString(),
+      message: 'Assets scanned: ' + assets.length + '\nDate: ' + new Date().toLocaleString() + '\n\n--- ASSET LIST ---\n' + assets.map(a => 'Tag: ' + a.tag + ' | Model: ' + a.model + ' | S/N: ' + a.serial).join('\n'),
+      csv_data: csv
+    });
+    showToast('✓ Email sent & CSV downloaded!');
+  } catch(err) {
+    console.error('EmailJS error:', err);
+    showToast('Email failed — CSV still downloaded to device', 'var(--danger)');
   }
-
-  showToast(`✓ CSV downloaded (${assets.length} assets)`);
 }
 </script>
-
 </body>
 </html>
