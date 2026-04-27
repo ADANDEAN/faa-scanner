@@ -311,7 +311,7 @@ function handleFileUpload(e) {
     const img = new Image();
     img.onload = () => {
       const canvas = document.getElementById('captureCanvas');
-      const MAX = 1600;
+      const MAX = 2400;
       let w = img.width, h = img.height;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -319,7 +319,7 @@ function handleFileUpload(e) {
       }
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      analyzeImage(canvas.toDataURL('image/jpeg', 0.85));
+      analyzeImage(canvas.toDataURL('image/jpeg', 0.95));
     };
     img.src = ev.target.result;
   };
@@ -343,7 +343,7 @@ async function analyzeImage(dataUrl) {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: 'Extract these fields from the M.C. Dean label or FAA asset tag sticker. Return ONLY valid JSON, no markdown, no extra text:\n{\n  "asset_tag": "<number printed under the words Property of FAA on white sticker labels, or the Asset Tag field value on blue M.C.Dean labels, or null if not found>",\n  "serial": "<Serial No field value, or null if not found>"\n}\nIf a field is not visible use null. Do not guess.' }
+            { type: 'text', text: 'You are reading labels on FAA equipment. Extract exactly two values:\n\n1. ASSET TAG: Look for a small white rectangular sticker that has the M.C. DEAN logo at the top, the words "Property of FAA" in the middle, and a NUMBER printed in large font directly below those words. That number (typically 6 digits, e.g. 117521) is the asset_tag. Read ONLY the number that appears directly beneath the words "Property of FAA". Do NOT use any number from the blue label. If no white FAA sticker is visible in the image, return null.\n\n2. SERIAL NUMBER: Look at the blue or teal M.C. Dean equipment label. Scan down the left column for a row labeled exactly "Serial No". Read the value to the right of that label with extreme care, digit by digit. It is a long numeric string (e.g. 82162523700767). Do NOT use the large barcode number at the bottom of the blue label. Do NOT use the PO No value. ONLY the value on the row labeled "Serial No". If not visible return null.\n\nReturn ONLY this JSON, no markdown, no explanation:\n{\n  "asset_tag": "<number directly under Property of FAA text, or null>",\n  "serial": "<number from Serial No row only, or null>"\n}' }
           ]
         }]
       })
