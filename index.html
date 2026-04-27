@@ -9,66 +9,42 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
-    --bg: #0a0e14;
-    --surface: #111820;
-    --border: #1e2d3d;
-    --accent: #00d4ff;
-    --accent2: #ff6b35;
-    --text: #cdd9e5;
-    --muted: #4a6278;
-    --success: #39d353;
-    --danger: #ff4444;
-    --mono: 'Share Tech Mono', monospace;
-    --display: 'Barlow Condensed', sans-serif;
+    --bg: #0a0e14; --surface: #111820; --border: #1e2d3d;
+    --accent: #00d4ff; --accent2: #ff6b35; --text: #cdd9e5;
+    --muted: #4a6278; --success: #39d353; --danger: #ff4444;
+    --mono: 'Share Tech Mono', monospace; --display: 'Barlow Condensed', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--mono);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-    -webkit-text-size-adjust: 100%;
-  }
-  .header {
-    background: var(--surface);
-    border-bottom: 2px solid var(--accent);
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+  body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+
+  .header { background: var(--surface); border-bottom: 2px solid var(--accent); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
   .header-left { display: flex; align-items: center; gap: 10px; }
   .logo { font-family: var(--display); font-weight: 900; font-size: 22px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
   .logo span { color: var(--accent2); }
   .badge { background: var(--accent); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 10px; padding: 2px 7px; border-radius: 2px; letter-spacing: 1px; }
   .scan-count { font-size: 12px; color: var(--muted); }
   .scan-count span { color: var(--success); }
+
   main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 600px; margin: 0 auto; width: 100%; }
 
-  .photo-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  /* API Key setup screen */
+  .setup-screen { display: flex; flex-direction: column; gap: 16px; }
+  .setup-card { background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; padding: 20px; }
+  .setup-title { font-family: var(--display); font-size: 20px; font-weight: 900; color: var(--accent); letter-spacing: 2px; margin-bottom: 10px; }
+  .setup-body { font-size: 12px; color: var(--muted); line-height: 1.8; margin-bottom: 16px; }
+  .setup-body a { color: var(--accent); }
+  .setup-body b { color: var(--text); }
+  .setup-steps { font-size: 12px; color: var(--muted); line-height: 2; margin-bottom: 16px; }
+  .setup-steps span { color: var(--accent); font-weight: bold; }
+
+  /* Main app screen */
+  .app-screen { display: none; flex-direction: column; gap: 14px; }
+  .app-screen.visible { display: flex; }
+
   .section-label { font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 14px 8px; }
 
-  .upload-area {
-    margin: 0 14px 0;
-    border: 2px dashed var(--border);
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    position: relative;
-    min-height: 160px;
-    overflow: hidden;
-  }
-  .upload-area:active { border-color: var(--accent); background: rgba(0,212,255,0.04); }
+  .photo-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .upload-area { margin: 0 14px 0; border: 2px dashed var(--border); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.2s; position: relative; min-height: 160px; overflow: hidden; }
   .upload-area.has-image { border-style: solid; border-color: var(--accent); min-height: unset; }
   .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); padding: 30px 20px; }
   .upload-icon { font-size: 48px; }
@@ -77,7 +53,6 @@
   #previewImg { width: 100%; display: none; border-radius: 4px; }
   #previewImg.visible { display: block; }
   #photoInput { display: none; }
-
   .photo-actions { display: flex; gap: 10px; padding: 10px 14px 14px; }
 
   .processing-bar { display: none; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(0,212,255,0.06); border-top: 1px solid var(--border); }
@@ -86,31 +61,23 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .processing-text { font-family: var(--display); font-size: 13px; letter-spacing: 1px; color: var(--accent); }
 
-  .btn { flex: 1; padding: 11px 12px; border: none; border-radius: 4px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; -webkit-appearance: none; text-align: center; }
+  .btn { flex: 1; padding: 11px 12px; border: none; border-radius: 4px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; -webkit-appearance: none; text-align: center; display: block; width: 100%; }
   .btn-primary { background: var(--accent); color: var(--bg); }
   .btn-primary:active { filter: brightness(0.85); }
   .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); flex: 1; display: flex; align-items: center; justify-content: center; }
   .btn-outline:active { background: rgba(0,212,255,0.1); }
-  .btn-danger { background: var(--danger); color: #fff; width: 100%; }
-  .btn-danger:active { filter: brightness(0.85); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-sm { padding: 8px 10px; font-size: 12px; }
 
   .fields-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
   .fields-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
   .field-row { display: flex; flex-direction: column; gap: 4px; }
   .field-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
-  .field-value {
-    background: var(--bg); border: 1px solid var(--border); border-radius: 3px;
-    padding: 9px 10px; font-family: var(--mono); font-size: 15px; color: var(--text);
-    width: 100%; outline: none; transition: border-color 0.15s;
-    -webkit-appearance: none; appearance: none;
-  }
+  .field-value { background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 9px 10px; font-family: var(--mono); font-size: 15px; color: var(--text); width: 100%; outline: none; transition: border-color 0.15s; -webkit-appearance: none; appearance: none; }
   .field-value:focus { border-color: var(--accent); }
   .field-value.populated { border-color: var(--success); color: var(--success); }
-  select.field-value {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300d4ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer;
-  }
+  select.field-value { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300d4ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
   select.field-value option { background: #111820; color: var(--text); }
 
   .assets-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
@@ -125,9 +92,13 @@
 
   .actions-section { display: flex; flex-direction: column; gap: 10px; padding-bottom: 40px; }
 
+  /* Key indicator in header */
+  .key-status { font-size: 10px; cursor: pointer; padding: 3px 8px; border-radius: 3px; font-family: var(--display); font-weight: 700; letter-spacing: 1px; border: none; }
+  .key-status.set { background: rgba(57,211,83,0.15); color: var(--success); }
+  .key-status.unset { background: rgba(255,107,53,0.15); color: var(--accent2); }
+
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--success); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: 1px; padding: 12px 22px; border-radius: 4px; transition: transform 0.3s ease; z-index: 200; max-width: 88vw; text-align: center; }
   .toast.show { transform: translateX(-50%) translateY(0); }
-
   canvas { display: none; }
 </style>
 </head>
@@ -138,67 +109,97 @@
     <div class="logo">FAA<span>.</span>SCAN</div>
     <div class="badge">M.C. DEAN</div>
   </div>
-  <div class="scan-count">CAPTURED: <span id="countDisplay">0</span></div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="scan-count">CAPTURED: <span id="countDisplay">0</span></div>
+    <button class="key-status unset" id="keyStatusBtn" onclick="showKeySetup()">⚙ API KEY</button>
+  </div>
 </div>
 
 <main>
 
-  <div class="photo-section">
-    <div class="section-label">◈ PHOTO INPUT</div>
-    <label class="upload-area" id="uploadArea" for="photoInput">
-      <div class="upload-placeholder" id="uploadPlaceholder">
-        <div class="upload-icon">📸</div>
-        <div class="upload-text">TAP TO TAKE / UPLOAD PHOTO</div>
-        <div class="upload-sub">Take a photo of the label or FAA sticker<br>Best results in good lighting, label fills frame</div>
+  <!-- SETUP SCREEN -->
+  <div class="setup-screen" id="setupScreen">
+    <div class="setup-card">
+      <div class="setup-title">◈ ONE-TIME SETUP</div>
+      <div class="setup-body">
+        This app uses the <b>Anthropic Claude API</b> to read your label photos.<br><br>
+        Your API key is stored <b>only on this device</b> — it never leaves your phone and is never sent anywhere except directly to Anthropic's servers to process your photos.
       </div>
-      <img id="previewImg" alt="Label preview" />
-      <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
-    </label>
-    <div class="processing-bar" id="processingBar">
-      <div class="spinner"></div>
-      <div class="processing-text">READING LABEL — PLEASE WAIT...</div>
-    </div>
-    <div class="photo-actions">
-      <label class="btn btn-outline" for="photoInput" style="display:flex;align-items:center;justify-content:center;">↺ RETAKE</label>
-      <button class="btn btn-primary" id="analyzeBtn" onclick="reanalyze()" disabled>⊙ RE-EXTRACT</button>
+      <div class="setup-steps">
+        <span>1.</span> Go to <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+        <span>2.</span> Sign in → click <b>API Keys</b> in the sidebar<br>
+        <span>3.</span> Click <b>Create Key</b> → copy it<br>
+        <span>4.</span> Paste it below and tap Save
+      </div>
+      <div class="field-row" style="margin-bottom:12px;">
+        <div class="field-label">Anthropic API Key</div>
+        <input class="field-value" id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" spellcheck="false" />
+      </div>
+      <button class="btn btn-primary" onclick="saveApiKey()">SAVE &amp; START SCANNING</button>
     </div>
   </div>
 
-  <div class="fields-section">
-    <div class="section-label">◈ EXTRACTED DATA</div>
-    <div class="fields-grid">
-      <div class="field-row">
-        <div class="field-label">Asset Tag — Property of FAA #</div>
-        <input class="field-value" id="fieldAssetTag" placeholder="e.g. 117521" />
-      </div>
-      <div class="field-row">
-        <div class="field-label">Part No / Model</div>
-        <select class="field-value" id="fieldModel">
-          <option value="">— Select Model —</option>
-          <option value="'UTR-9202ABTRLNL">'UTR-9202ABTRLNL</option>
-          <option value="'LNL-1320-S3">'LNL-1320-S3</option>
-        </select>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Serial No</div>
-        <input class="field-value" id="fieldSerial" placeholder="e.g. 82162523700767" />
-      </div>
-    </div>
-    <div style="margin-top:12px;">
-      <button class="btn btn-primary" onclick="addAsset()" id="addBtn" disabled>+ ADD TO LIST</button>
-    </div>
-  </div>
+  <!-- MAIN APP SCREEN -->
+  <div class="app-screen" id="appScreen">
 
-  <div class="assets-section">
-    <div class="section-label" style="padding:0 0 8px;">◈ SCAN LIST</div>
-    <div class="asset-list" id="assetList">
-      <div class="empty-list">No assets added yet</div>
+    <div class="photo-section">
+      <div class="section-label">◈ PHOTO INPUT</div>
+      <label class="upload-area" id="uploadArea" for="photoInput">
+        <div class="upload-placeholder" id="uploadPlaceholder">
+          <div class="upload-icon">📸</div>
+          <div class="upload-text">TAP TO TAKE / UPLOAD PHOTO</div>
+          <div class="upload-sub">Photo the label or FAA sticker<br>Best results in good lighting</div>
+        </div>
+        <img id="previewImg" alt="Label preview" />
+        <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+      </label>
+      <div class="processing-bar" id="processingBar">
+        <div class="spinner"></div>
+        <div class="processing-text">READING LABEL — PLEASE WAIT...</div>
+      </div>
+      <div class="photo-actions">
+        <label class="btn btn-outline btn-sm" for="photoInput">↺ RETAKE</label>
+        <button class="btn btn-outline btn-sm" id="analyzeBtn" onclick="reanalyze()" disabled style="flex:1;">⊙ RE-EXTRACT</button>
+      </div>
     </div>
-  </div>
 
-  <div class="actions-section">
-    <button class="btn btn-danger" onclick="finishAndSend()">■ END SESSION &amp; SEND CSV</button>
-  </div>
+    <div class="fields-section">
+      <div class="section-label">◈ EXTRACTED DATA</div>
+      <div class="fields-grid">
+        <div class="field-row">
+          <div class="field-label">Asset Tag — Property of FAA #</div>
+          <input class="field-value" id="fieldAssetTag" placeholder="e.g. 117521" />
+        </div>
+        <div class="field-row">
+          <div class="field-label">Part No / Model</div>
+          <select class="field-value" id="fieldModel">
+            <option value="">— Select Model —</option>
+            <option value="'UTR-9202ABTRLNL">'UTR-9202ABTRLNL</option>
+            <option value="'LNL-1320-S3">'LNL-1320-S3</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Serial No</div>
+          <input class="field-value" id="fieldSerial" placeholder="e.g. 82162523700767" />
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-primary" onclick="addAsset()" id="addBtn" disabled>+ ADD TO LIST</button>
+      </div>
+    </div>
+
+    <div class="assets-section">
+      <div class="section-label" style="padding:0 0 8px;">◈ SCAN LIST</div>
+      <div class="asset-list" id="assetList">
+        <div class="empty-list">No assets added yet</div>
+      </div>
+    </div>
+
+    <div class="actions-section">
+      <button class="btn btn-danger" onclick="finishAndSend()">■ END SESSION &amp; SEND CSV</button>
+    </div>
+
+  </div><!-- end app-screen -->
 
 </main>
 
@@ -208,6 +209,7 @@
 <script>
 let assets = [];
 let currentDataUrl = null;
+let apiKey = '';
 
 const analyzeBtn = document.getElementById('analyzeBtn');
 const addBtn = document.getElementById('addBtn');
@@ -219,6 +221,54 @@ const EJS_TEMPLATE_ID = 'template_8scskqp';
 const RECIPIENT_EMAIL = 'adanahz55@gmail.com';
 
 emailjs.init(EJS_PUBLIC_KEY);
+
+// On load — check if key already saved in localStorage
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('faa_api_key');
+  if (saved && saved.startsWith('sk-ant-')) {
+    apiKey = saved;
+    showApp();
+  } else {
+    showSetup();
+  }
+});
+
+function showSetup() {
+  document.getElementById('setupScreen').style.display = 'flex';
+  document.getElementById('appScreen').classList.remove('visible');
+  document.getElementById('keyStatusBtn').textContent = '⚙ API KEY';
+  document.getElementById('keyStatusBtn').className = 'key-status unset';
+}
+
+function showApp() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('appScreen').classList.add('visible');
+  document.getElementById('keyStatusBtn').textContent = '✓ API KEY';
+  document.getElementById('keyStatusBtn').className = 'key-status set';
+}
+
+function showKeySetup() {
+  // Toggle — lets user update key if needed
+  const setup = document.getElementById('setupScreen');
+  if (setup.style.display === 'none' || setup.style.display === '') {
+    document.getElementById('apiKeyInput').value = apiKey || '';
+    showSetup();
+  } else {
+    if (apiKey) showApp();
+  }
+}
+
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val.startsWith('sk-ant-')) {
+    showToast('Key must start with sk-ant-', 'var(--danger)');
+    return;
+  }
+  apiKey = val;
+  localStorage.setItem('faa_api_key', val);
+  showApp();
+  showToast('✓ API key saved on this device');
+}
 
 function showToast(msg, color) {
   const t = document.getElementById('toast');
@@ -246,15 +296,11 @@ function handlePhoto(e) {
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       currentDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-
       const preview = document.getElementById('previewImg');
-      const placeholder = document.getElementById('uploadPlaceholder');
-      const uploadArea = document.getElementById('uploadArea');
       preview.src = currentDataUrl;
       preview.classList.add('visible');
-      placeholder.style.display = 'none';
-      uploadArea.classList.add('has-image');
-
+      document.getElementById('uploadPlaceholder').style.display = 'none';
+      document.getElementById('uploadArea').classList.add('has-image');
       analyzeImage(currentDataUrl);
     };
     img.src = ev.target.result;
@@ -268,6 +314,7 @@ function reanalyze() {
 }
 
 async function analyzeImage(dataUrl) {
+  if (!apiKey) { showToast('Enter your API key first', 'var(--accent2)'); showSetup(); return; }
   processingBar.classList.add('active');
   analyzeBtn.disabled = true;
   addBtn.disabled = true;
@@ -278,7 +325,12 @@ async function analyzeImage(dataUrl) {
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 500,
@@ -291,6 +343,14 @@ async function analyzeImage(dataUrl) {
         }]
       })
     });
+
+    if (resp.status === 401) {
+      showToast('Invalid API key — tap ⚙ API KEY to update', 'var(--danger)');
+      analyzeBtn.disabled = false;
+      addBtn.disabled = false;
+      processingBar.classList.remove('active');
+      return;
+    }
 
     const data = await resp.json();
     const rawText = data.content?.find(b => b.type === 'text')?.text || '{}';
@@ -317,7 +377,7 @@ async function analyzeImage(dataUrl) {
 
   } catch(err) {
     console.error('Extraction error:', err);
-    showToast('Extraction failed — fill in manually', 'var(--danger)');
+    showToast('Extraction failed — check connection & retry', 'var(--danger)');
     analyzeBtn.disabled = false;
     addBtn.disabled = false;
   } finally {
@@ -337,12 +397,10 @@ function clearFields() {
   addBtn.disabled = true;
   analyzeBtn.disabled = true;
   const preview = document.getElementById('previewImg');
-  const placeholder = document.getElementById('uploadPlaceholder');
-  const uploadArea = document.getElementById('uploadArea');
   preview.src = '';
   preview.classList.remove('visible');
-  placeholder.style.display = 'flex';
-  uploadArea.classList.remove('has-image');
+  document.getElementById('uploadPlaceholder').style.display = 'flex';
+  document.getElementById('uploadArea').classList.remove('has-image');
   currentDataUrl = null;
 }
 
