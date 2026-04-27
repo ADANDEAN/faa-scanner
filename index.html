@@ -122,18 +122,18 @@
     <div class="setup-card">
       <div class="setup-title">◈ ONE-TIME SETUP</div>
       <div class="setup-body">
-        This app uses the <b>Anthropic Claude API</b> to read your label photos.<br><br>
+        This app uses the <b>Google Gemini API</b> to read your label photos. It is completely free — no credit card needed.<br><br>
         Your API key is stored <b>only on this device</b> — it never leaves your phone and is never sent anywhere except directly to Anthropic's servers to process your photos.
       </div>
       <div class="setup-steps">
-        <span>1.</span> Go to <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
-        <span>2.</span> Sign in → click <b>API Keys</b> in the sidebar<br>
-        <span>3.</span> Click <b>Create Key</b> → copy it<br>
+        <span>1.</span> Go to <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a><br>
+        <span>2.</span> Sign in with your Google account<br>
+        <span>3.</span> Click <b>Get API Key</b> → <b>Create API key</b> → copy it<br>
         <span>4.</span> Paste it below and tap Save
       </div>
       <div class="field-row" style="margin-bottom:12px;">
         <div class="field-label">Anthropic API Key</div>
-        <input class="field-value" id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" spellcheck="false" />
+        <input class="field-value" id="apiKeyInput" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" spellcheck="false" />
       </div>
       <button class="btn btn-primary" onclick="saveApiKey()">SAVE &amp; START SCANNING</button>
     </div>
@@ -225,7 +225,7 @@ emailjs.init(EJS_PUBLIC_KEY);
 // On load — check if key already saved in localStorage
 window.addEventListener('load', () => {
   const saved = localStorage.getItem('faa_api_key');
-  if (saved && saved.startsWith('sk-ant-')) {
+  if (saved && saved.length > 10) {
     apiKey = saved;
     showApp();
   } else {
@@ -260,7 +260,7 @@ function showKeySetup() {
 
 function saveApiKey() {
   const val = document.getElementById('apiKeyInput').value.trim();
-  if (!val.startsWith('sk-ant-')) {
+  if (val.length < 10) {
     showToast('Key must start with sk-ant-', 'var(--danger)');
     return;
   }
@@ -323,29 +323,26 @@ async function analyzeImage(dataUrl) {
   const mediaType = dataUrl.split(';')[0].split(':')[1];
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const prompt = 'You are extracting data from a photo of M.C. Dean FAA equipment labels. Carefully examine the entire image and extract these two values. FIELD 1 - asset_tag: Look for a small WHITE rectangular sticker/label that contains the M.C. DEAN logo at the top, the words Property of FAA, and a NUMBER in LARGE BOLD font directly below those words (typically 6 digits, examples: 117520, 117521, 117522). Return that number as asset_tag. If not visible return null. FIELD 2 - serial: Look for a BLUE or TEAL M.C. Dean label with many rows. Find the row labeled Serial No on the left and read the number on the right carefully digit by digit (typically 14 digits, example: 82162523700767). Do NOT return the barcode number at the bottom. Do NOT return the PO No. ONLY the Serial No row value. If not visible or N/A return null. Respond with ONLY this JSON and nothing else: {"asset_tag": "<number or null>", "serial": "<number or null>"}';
+
+    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: 'You are extracting data from a photo of M.C. Dean FAA equipment labels. Carefully examine the entire image and extract these two values:\n\nFIELD 1 - asset_tag:\nLook for a small WHITE rectangular sticker/label that contains:\n- "M.C. DEAN" logo at the top\n- Text that says "Property of FAA"\n- A NUMBER in LARGE BOLD font directly below "Property of FAA" (typically 6 digits, examples: 117520, 117521, 117522)\nReturn that large bold number as asset_tag. If no such white sticker is visible, return null.\n\nFIELD 2 - serial:\nLook for a BLUE or TEAL colored M.C. Dean label with multiple rows of labeled fields. Find the specific row where the label on the left reads "Serial No" and carefully read the number on the right side of that row digit by digit. This is typically 14 digits long (example: 82162523700767).\nCRITICAL: Do NOT return the barcode number printed below the barcode at the bottom of the blue label. Do NOT return the PO No. ONLY return what is on the "Serial No" row.\nIf Serial No says N/A or is not visible, return null.\n\nRespond with ONLY this JSON, nothing else:\n{"asset_tag": "<number or null>", "serial": "<number or null>"}' }
+        contents: [{
+          parts: [
+            { inline_data: { mime_type: mediaType, data: base64 } },
+            { text: prompt }
           ]
-        }]
+        }],
+        generationConfig: { temperature: 0, maxOutputTokens: 500 }
       })
     });
 
-    if (resp.status === 401) {
-      showToast('Invalid API key — tap ⚙ API KEY to update', 'var(--danger)');
+    if (resp.status === 400 || resp.status === 403) {
+      const errData = await resp.json().catch(() => ({}));
+      const msg = errData?.error?.message || 'HTTP ' + resp.status;
+      showToast('API Key Error: ' + msg.slice(0,60), 'var(--danger)');
       analyzeBtn.disabled = false;
       addBtn.disabled = false;
       processingBar.classList.remove('active');
@@ -362,7 +359,7 @@ async function analyzeImage(dataUrl) {
       return;
     }
     const data = await resp.json();
-    const rawText = data.content?.find(b => b.type === 'text')?.text || '{}';
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
     const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
 
     let extracted = 0;
