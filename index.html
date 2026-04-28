@@ -9,15 +9,42 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
-    --bg: #0a0e14; --surface: #111820; --border: #1e2d3d;
-    --accent: #00d4ff; --accent2: #ff6b35; --text: #cdd9e5;
-    --muted: #4a6278; --success: #39d353; --danger: #ff4444;
-    --mono: 'Share Tech Mono', monospace; --display: 'Barlow Condensed', sans-serif;
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #21262d;
+    --border2: #30363d;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --text: #cdd9e5;
+    --muted: #4a6278;
+    --success: #39d353;
+    --danger: #ff4444;
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Barlow Condensed', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
 
-  .header { background: var(--surface); border-bottom: 2px solid var(--accent); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
   .header-left { display: flex; align-items: center; gap: 10px; }
   .logo { font-family: var(--display); font-weight: 900; font-size: 22px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
   .logo span { color: var(--accent2); }
@@ -25,80 +52,99 @@
   .scan-count { font-size: 12px; color: var(--muted); }
   .scan-count span { color: var(--success); }
 
-  main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 600px; margin: 0 auto; width: 100%; }
+  main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 700px; margin: 0 auto; width: 100%; }
 
-  /* API Key setup screen */
-  .setup-screen { display: flex; flex-direction: column; gap: 16px; }
-  .setup-card { background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; padding: 20px; }
-  .setup-title { font-family: var(--display); font-size: 20px; font-weight: 900; color: var(--accent); letter-spacing: 2px; margin-bottom: 10px; }
-  .setup-body { font-size: 12px; color: var(--muted); line-height: 1.8; margin-bottom: 16px; }
-  .setup-body a { color: var(--accent); }
-  .setup-body b { color: var(--text); }
-  .setup-steps { font-size: 12px; color: var(--muted); line-height: 2; margin-bottom: 16px; }
-  .setup-steps span { color: var(--accent); font-weight: bold; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .card-label { font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 14px 6px; }
 
-  /* Main app screen */
-  .app-screen { display: none; flex-direction: column; gap: 14px; }
-  .app-screen.visible { display: flex; }
+  /* Camera */
+  .cam-wrap { position: relative; background: #000; margin: 0 14px 10px; border-radius: 6px; overflow: hidden; min-height: 220px; display: flex; align-items: center; justify-content: center; }
+  #vid { width: 100%; display: none; border-radius: 6px; }
+  #vid.on { display: block; }
+  #snap { width: 100%; display: none; border-radius: 6px; }
+  #snap.on { display: block; }
 
-  .section-label { font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 14px 8px; }
+  .cam-placeholder { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 20px; }
+  .cam-icon { font-size: 36px; }
+  .cam-sub { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
 
-  .photo-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-  .upload-area { margin: 0 14px 0; border: 2px dashed var(--border); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.2s; position: relative; min-height: 160px; overflow: hidden; }
-  .upload-area.has-image { border-style: solid; border-color: var(--accent); min-height: unset; }
-  .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); padding: 30px 20px; }
-  .upload-icon { font-size: 48px; }
-  .upload-text { font-family: var(--display); font-size: 15px; letter-spacing: 1px; color: var(--accent); }
-  .upload-sub { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.6; }
-  #previewImg { width: 100%; display: none; border-radius: 4px; }
-  #previewImg.visible { display: block; }
-  #photoInput { display: none; }
-  .photo-actions { display: flex; gap: 10px; padding: 10px 14px 14px; }
+  .start-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 3px;
+    padding: 18px 48px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .start-btn:hover { background: #00bfeb; }
+  .start-btn:active { transform: scale(0.97); }
+  .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .processing-bar { display: none; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(0,212,255,0.06); border-top: 1px solid var(--border); }
+  .corners { position: absolute; inset: 20px; pointer-events: none; }
+  .corner { position: absolute; width: 20px; height: 20px; border-color: var(--accent); border-style: solid; opacity: 0.8; }
+  .corner.tl { top:0; left:0; border-width: 2px 0 0 2px; }
+  .corner.tr { top:0; right:0; border-width: 2px 2px 0 0; }
+  .corner.bl { bottom:0; left:0; border-width: 0 0 2px 2px; }
+  .corner.br { bottom:0; right:0; border-width: 0 2px 2px 0; }
+  .scan-line { position: absolute; left:10%; right:10%; height:2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanMove 2s ease-in-out infinite; display: none; opacity: 0.8; }
+  @keyframes scanMove { 0%{top:15%;opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{top:85%;opacity:0;} }
+
+  .processing-bar { display: none; align-items: center; gap: 10px; padding: 8px 14px; background: rgba(0,212,255,0.06); border-top: 1px solid var(--border); }
   .processing-bar.active { display: flex; }
-  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .processing-text { font-family: var(--display); font-size: 13px; letter-spacing: 1px; color: var(--accent); }
 
-  .btn { flex: 1; padding: 11px 12px; border: none; border-radius: 4px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; -webkit-appearance: none; text-align: center; display: block; width: 100%; }
-  .btn-primary { background: var(--accent); color: var(--bg); }
-  .btn-primary:active { filter: brightness(0.85); }
-  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); flex: 1; display: flex; align-items: center; justify-content: center; }
-  .btn-outline:active { background: rgba(0,212,255,0.1); }
-  .btn-danger { background: var(--danger); color: #fff; }
-  .btn-sm { padding: 8px 10px; font-size: 12px; }
+  .cam-controls { display: flex; gap: 10px; padding: 8px 14px 14px; }
+  #fileInput { display: none; }
 
-  .fields-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
-  .fields-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .btn { flex: 1; padding: 11px 12px; border: none; border-radius: 5px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; -webkit-appearance: none; text-align: center; }
+  .btn-capture { background: #1a3a1a; border: 1px solid var(--success); color: var(--success); font-size: 16px; padding: 13px; }
+  .btn-capture:hover { background: #223322; }
+  .btn-capture:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .btn-outline:hover { background: rgba(0,212,255,0.08); }
+  .btn-danger { background: #3d1a1a; border: 1px solid var(--danger); color: #ff6b6b; width: 100%; }
+  .btn-danger:hover { background: #4d2020; }
+
+  /* Fields */
+  .fields-wrap { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
   .field-row { display: flex; flex-direction: column; gap: 4px; }
   .field-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
-  .field-value { background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 9px 10px; font-family: var(--mono); font-size: 15px; color: var(--text); width: 100%; outline: none; transition: border-color 0.15s; -webkit-appearance: none; appearance: none; }
+  .field-value { background: var(--bg); border: 1px solid var(--border2); border-radius: 4px; padding: 9px 10px; font-family: var(--mono); font-size: 14px; color: var(--text); width: 100%; outline: none; transition: border-color 0.15s; -webkit-appearance: none; appearance: none; }
   .field-value:focus { border-color: var(--accent); }
   .field-value.populated { border-color: var(--success); color: var(--success); }
-  select.field-value { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300d4ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
-  select.field-value option { background: #111820; color: var(--text); }
+  select.field-value { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2300d4ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 26px; cursor: pointer; }
+  select.field-value option { background: var(--surface); color: var(--text); }
+  .btn-add { background: #1a2a1a; border: 1px solid var(--success); color: var(--success); border-radius: 5px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; padding: 11px; cursor: pointer; width: 100%; transition: background 0.15s; }
+  .btn-add:hover { background: #223322; }
+  .btn-add:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  .assets-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
-  .asset-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
-  .asset-item { background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 3px; padding: 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; animation: slideIn 0.2s ease; }
-  @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
-  .asset-info { flex: 1; }
+  /* Asset list */
+  .asset-section { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .asset-item { background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; padding: 10px 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; animation: slideIn 0.2s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(-6px);} to{opacity:1;transform:translateX(0);} }
   .asset-tag { color: var(--accent); font-size: 13px; font-weight: bold; }
-  .asset-detail { color: var(--muted); margin-top: 3px; line-height: 1.6; }
-  .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 0 4px; line-height: 1; }
-  .empty-list { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; border: 1px dashed var(--border); border-radius: 4px; }
+  .asset-detail { color: var(--muted); font-size: 11px; margin-top: 3px; line-height: 1.6; }
+  .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0; line-height: 1; }
+  .remove-btn:hover { color: var(--danger); }
+  .empty-list { text-align: center; color: var(--muted); font-size: 12px; padding: 22px; border: 1px dashed var(--border); border-radius: 5px; }
 
   .actions-section { display: flex; flex-direction: column; gap: 10px; padding-bottom: 40px; }
 
-  /* Key indicator in header */
-  .key-status { font-size: 10px; cursor: pointer; padding: 3px 8px; border-radius: 3px; font-family: var(--display); font-weight: 700; letter-spacing: 1px; border: none; }
-  .key-status.set { background: rgba(57,211,83,0.15); color: var(--success); }
-  .key-status.unset { background: rgba(255,107,53,0.15); color: var(--accent2); }
-
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--success); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: 1px; padding: 12px 22px; border-radius: 4px; transition: transform 0.3s ease; z-index: 200; max-width: 88vw; text-align: center; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: 1px; padding: 12px 22px; border-radius: 5px; transition: transform 0.3s ease; z-index: 200; max-width: 88vw; text-align: center; background: var(--success); color: var(--bg); }
   .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.err { background: var(--danger); color: #fff; }
+  .toast.wrn { background: var(--accent2); color: #fff; }
+
   canvas { display: none; }
 </style>
 </head>
@@ -109,97 +155,79 @@
     <div class="logo">FAA<span>.</span>SCAN</div>
     <div class="badge">M.C. DEAN</div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <div class="scan-count">CAPTURED: <span id="countDisplay">0</span></div>
-    <button class="key-status unset" id="keyStatusBtn" onclick="showKeySetup()">⚙ API KEY</button>
-  </div>
+  <div class="scan-count">CAPTURED: <span id="countDisplay">0</span></div>
 </div>
 
 <main>
 
-  <!-- SETUP SCREEN -->
-  <div class="setup-screen" id="setupScreen">
-    <div class="setup-card">
-      <div class="setup-title">◈ ONE-TIME SETUP</div>
-      <div class="setup-body">
-        This app uses the <b>Google Gemini API</b> to read your label photos. It is completely free — no credit card needed.<br><br>
-        Your API key is stored <b>only on this device</b> — it never leaves your phone and is never sent anywhere except directly to Anthropic's servers to process your photos.
+  <!-- Camera Card -->
+  <div class="card">
+    <div class="card-label">◈ CAMERA INPUT</div>
+    <div class="cam-wrap" id="camWrap">
+      <video id="vid" autoplay playsinline muted></video>
+      <img id="snap" alt="Captured frame">
+      <div class="cam-placeholder" id="camPlaceholder">
+        <div class="cam-icon">📷</div>
+        <button class="start-btn" id="startBtn" onclick="startCamera()">
+          ▶&nbsp; START CAMERA
+        </button>
+        <div class="cam-sub">Click the button above to activate your webcam<br>Allow camera access when the browser asks</div>
       </div>
-      <div class="setup-steps">
-        <span>1.</span> Go to <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a><br>
-        <span>2.</span> Sign in with your Google account<br>
-        <span>3.</span> Click <b>Get API Key</b> → <b>Create API key</b> → copy it<br>
-        <span>4.</span> Paste it below and tap Save
+      <div class="corners" id="corners" style="display:none;">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
       </div>
-      <div class="field-row" style="margin-bottom:12px;">
-        <div class="field-label">Anthropic API Key</div>
-        <input class="field-value" id="apiKeyInput" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" spellcheck="false" />
-      </div>
-      <button class="btn btn-primary" onclick="saveApiKey()">SAVE &amp; START SCANNING</button>
+      <div class="scan-line" id="scanLine"></div>
+    </div>
+    <div class="processing-bar" id="processingBar">
+      <div class="spinner"></div>
+      <div class="processing-text">READING LABEL — PLEASE WAIT...</div>
+    </div>
+    <div class="cam-controls">
+      <button class="btn btn-capture" id="captureBtn" onclick="doCapture()" disabled>⊙ Capture</button>
+      <label class="btn btn-outline" style="display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        ↑ Upload photo
+        <input type="file" id="fileInput" accept="image/*" onchange="doUpload(event)">
+      </label>
     </div>
   </div>
 
-  <!-- MAIN APP SCREEN -->
-  <div class="app-screen" id="appScreen">
-
-    <div class="photo-section">
-      <div class="section-label">◈ PHOTO INPUT</div>
-      <label class="upload-area" id="uploadArea" for="photoInput">
-        <div class="upload-placeholder" id="uploadPlaceholder">
-          <div class="upload-icon">📸</div>
-          <div class="upload-text">TAP TO TAKE / UPLOAD PHOTO</div>
-          <div class="upload-sub">Photo the label or FAA sticker<br>Best results in good lighting</div>
-        </div>
-        <img id="previewImg" alt="Label preview" />
-        <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
-      </label>
-      <div class="processing-bar" id="processingBar">
-        <div class="spinner"></div>
-        <div class="processing-text">READING LABEL — PLEASE WAIT...</div>
+  <!-- Extracted Fields -->
+  <div class="card">
+    <div class="card-label">◈ EXTRACTED DATA</div>
+    <div class="fields-wrap">
+      <div class="field-row">
+        <div class="field-label">Asset Tag — Property of FAA #</div>
+        <input class="field-value" id="fieldAssetTag" placeholder="e.g. 117521" />
       </div>
-      <div class="photo-actions">
-        <label class="btn btn-outline btn-sm" for="photoInput">↺ RETAKE</label>
-        <button class="btn btn-outline btn-sm" id="analyzeBtn" onclick="reanalyze()" disabled style="flex:1;">⊙ RE-EXTRACT</button>
+      <div class="field-row">
+        <div class="field-label">Part No / Model</div>
+        <select class="field-value" id="fieldModel">
+          <option value="">— Select model —</option>
+          <option value="'UTR-9202ABTRLNL">'UTR-9202ABTRLNL</option>
+          <option value="'LNL-1320-S3">'LNL-1320-S3</option>
+        </select>
       </div>
+      <div class="field-row">
+        <div class="field-label">Serial No</div>
+        <input class="field-value" id="fieldSerial" placeholder="e.g. 82162523700767" />
+      </div>
+      <button class="btn-add" id="addBtn" onclick="addAsset()" disabled>+ ADD TO LIST</button>
     </div>
+  </div>
 
-    <div class="fields-section">
-      <div class="section-label">◈ EXTRACTED DATA</div>
-      <div class="fields-grid">
-        <div class="field-row">
-          <div class="field-label">Asset Tag — Property of FAA #</div>
-          <input class="field-value" id="fieldAssetTag" placeholder="e.g. 117521" />
-        </div>
-        <div class="field-row">
-          <div class="field-label">Part No / Model</div>
-          <select class="field-value" id="fieldModel">
-            <option value="">— Select Model —</option>
-            <option value="'UTR-9202ABTRLNL">'UTR-9202ABTRLNL</option>
-            <option value="'LNL-1320-S3">'LNL-1320-S3</option>
-          </select>
-        </div>
-        <div class="field-row">
-          <div class="field-label">Serial No</div>
-          <input class="field-value" id="fieldSerial" placeholder="e.g. 82162523700767" />
-        </div>
-      </div>
-      <div style="margin-top:12px;">
-        <button class="btn btn-primary" onclick="addAsset()" id="addBtn" disabled>+ ADD TO LIST</button>
-      </div>
+  <!-- Scan List -->
+  <div class="card">
+    <div class="card-label">◈ SCAN LIST</div>
+    <div class="asset-section" id="assetList">
+      <div class="empty-list">No assets added yet</div>
     </div>
+  </div>
 
-    <div class="assets-section">
-      <div class="section-label" style="padding:0 0 8px;">◈ SCAN LIST</div>
-      <div class="asset-list" id="assetList">
-        <div class="empty-list">No assets added yet</div>
-      </div>
-    </div>
-
-    <div class="actions-section">
-      <button class="btn btn-danger" onclick="finishAndSend()">■ END SESSION &amp; SEND CSV</button>
-    </div>
-
-  </div><!-- end app-screen -->
+  <!-- End Session -->
+  <div class="actions-section">
+    <button class="btn btn-danger" onclick="finishAndSend()">■ END SESSION &amp; SEND CSV</button>
+  </div>
 
 </main>
 
@@ -208,12 +236,8 @@
 
 <script>
 let assets = [];
+let stream = null;
 let currentDataUrl = null;
-let apiKey = '';
-
-const analyzeBtn = document.getElementById('analyzeBtn');
-const addBtn = document.getElementById('addBtn');
-const processingBar = document.getElementById('processingBar');
 
 const EJS_PUBLIC_KEY  = '0ICfn2KzfPvExfqhT';
 const EJS_SERVICE_ID  = 'FAA SCANNER';
@@ -222,66 +246,55 @@ const RECIPIENT_EMAIL = 'adanahz55@gmail.com';
 
 emailjs.init(EJS_PUBLIC_KEY);
 
-// On load — check if key already saved in localStorage
-window.addEventListener('load', () => {
-  const saved = localStorage.getItem('faa_api_key');
-  if (saved && saved.length > 10) {
-    apiKey = saved;
-    showApp();
-  } else {
-    showSetup();
-  }
-});
-
-function showSetup() {
-  document.getElementById('setupScreen').style.display = 'flex';
-  document.getElementById('appScreen').classList.remove('visible');
-  document.getElementById('keyStatusBtn').textContent = '⚙ API KEY';
-  document.getElementById('keyStatusBtn').className = 'key-status unset';
-}
-
-function showApp() {
-  document.getElementById('setupScreen').style.display = 'none';
-  document.getElementById('appScreen').classList.add('visible');
-  document.getElementById('keyStatusBtn').textContent = '✓ API KEY';
-  document.getElementById('keyStatusBtn').className = 'key-status set';
-}
-
-function showKeySetup() {
-  // Toggle — lets user update key if needed
-  const setup = document.getElementById('setupScreen');
-  if (setup.style.display === 'none' || setup.style.display === '') {
-    document.getElementById('apiKeyInput').value = apiKey || '';
-    showSetup();
-  } else {
-    if (apiKey) showApp();
-  }
-}
-
-function saveApiKey() {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  if (val.length < 10) {
-    showToast('Key must start with sk-ant-', 'var(--danger)');
-    return;
-  }
-  apiKey = val;
-  localStorage.setItem('faa_api_key', val);
-  showApp();
-  showToast('✓ API key saved on this device');
-}
-
-function showToast(msg, color) {
+function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.style.background = color || 'var(--success)';
-  t.style.color = (color === 'var(--danger)' || color === 'var(--accent2)') ? '#fff' : 'var(--bg)';
+  t.className = 'toast' + (type ? ' ' + type : '');
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
+  setTimeout(() => t.classList.remove('show'), 3200);
 }
 
-function handlePhoto(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+async function startCamera() {
+  const btn = document.getElementById('startBtn');
+  btn.textContent = 'Starting...';
+  btn.disabled = true;
+  try {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1920 }, height: { ideal: 1080 } }
+    });
+    const vid = document.getElementById('vid');
+    vid.srcObject = stream;
+    await vid.play();
+    vid.classList.add('on');
+    document.getElementById('snap').classList.remove('on');
+    document.getElementById('camPlaceholder').style.display = 'none';
+    document.getElementById('corners').style.display = 'block';
+    document.getElementById('scanLine').style.display = 'block';
+    document.getElementById('captureBtn').disabled = false;
+  } catch(e) {
+    btn.textContent = '▶  START CAMERA';
+    btn.disabled = false;
+    if (e.name === 'NotAllowedError') showToast('Camera blocked — enable in browser address bar', 'err');
+    else if (e.name === 'NotFoundError') showToast('No camera found — use Upload instead', 'wrn');
+    else showToast('Camera error: ' + e.message, 'err');
+  }
+}
+
+function doCapture() {
+  const vid = document.getElementById('vid');
+  if (!vid.videoWidth) { showToast('Camera not ready yet', 'wrn'); return; }
+  const canvas = document.getElementById('captureCanvas');
+  canvas.width = vid.videoWidth;
+  canvas.height = vid.videoHeight;
+  canvas.getContext('2d').drawImage(vid, 0, 0);
+  const du = canvas.toDataURL('image/jpeg', 0.95);
+  showSnap(du);
+  analyzeImage(du);
+}
+
+function doUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     const img = new Image();
@@ -295,13 +308,9 @@ function handlePhoto(e) {
       }
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      currentDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-      const preview = document.getElementById('previewImg');
-      preview.src = currentDataUrl;
-      preview.classList.add('visible');
-      document.getElementById('uploadPlaceholder').style.display = 'none';
-      document.getElementById('uploadArea').classList.add('has-image');
-      analyzeImage(currentDataUrl);
+      const du = canvas.toDataURL('image/jpeg', 0.95);
+      showSnap(du);
+      analyzeImage(du);
     };
     img.src = ev.target.result;
   };
@@ -309,113 +318,90 @@ function handlePhoto(e) {
   e.target.value = '';
 }
 
-function reanalyze() {
-  if (currentDataUrl) analyzeImage(currentDataUrl);
+function showSnap(du) {
+  currentDataUrl = du;
+  const snap = document.getElementById('snap');
+  snap.src = du; snap.classList.add('on');
+  document.getElementById('vid').classList.remove('on');
+  document.getElementById('scanLine').style.display = 'none';
+  const cb = document.getElementById('captureBtn');
+  cb.textContent = '↺ Recapture';
+  cb.onclick = recapture;
+}
+
+function recapture() {
+  if (!stream) { showToast('Start camera first', 'wrn'); return; }
+  document.getElementById('vid').classList.add('on');
+  document.getElementById('snap').classList.remove('on');
+  document.getElementById('scanLine').style.display = 'block';
+  const cb = document.getElementById('captureBtn');
+  cb.textContent = '⊙ Capture';
+  cb.onclick = doCapture;
 }
 
 async function analyzeImage(dataUrl) {
-  if (!apiKey) { showToast('Enter your API key first', 'var(--accent2)'); showSetup(); return; }
-  processingBar.classList.add('active');
-  analyzeBtn.disabled = true;
-  addBtn.disabled = true;
+  document.getElementById('processingBar').classList.add('active');
+  document.getElementById('addBtn').disabled = true;
 
   const base64 = dataUrl.split(',')[1];
   const mediaType = dataUrl.split(';')[0].split(':')[1];
+  const prompt = 'Extract data from this M.C. Dean FAA label photo. FIELD 1 asset_tag: Find the small WHITE sticker with M.C. DEAN logo, words Property of FAA, and a large bold NUMBER directly below (6 digits e.g. 117521). Return that number. If not visible return null. FIELD 2 serial: Find the BLUE/TEAL label, locate the row labeled Serial No, read the value on the right digit by digit (14 digits e.g. 82162523700767). Do NOT return the barcode number at the bottom. Do NOT return PO No. If N/A or not visible return null. Return ONLY JSON: {"asset_tag":"<number or null>","serial":"<number or null>"}';
 
   try {
-    const prompt = 'You are extracting data from a photo of M.C. Dean FAA equipment labels. Carefully examine the entire image and extract these two values. FIELD 1 - asset_tag: Look for a small WHITE rectangular sticker/label that contains the M.C. DEAN logo at the top, the words Property of FAA, and a NUMBER in LARGE BOLD font directly below those words (typically 6 digits, examples: 117520, 117521, 117522). Return that number as asset_tag. If not visible return null. FIELD 2 - serial: Look for a BLUE or TEAL M.C. Dean label with many rows. Find the row labeled Serial No on the left and read the number on the right carefully digit by digit (typically 14 digits, example: 82162523700767). Do NOT return the barcode number at the bottom. Do NOT return the PO No. ONLY the Serial No row value. If not visible or N/A return null. Respond with ONLY this JSON and nothing else: {"asset_tag": "<number or null>", "serial": "<number or null>"}';
-
-    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
-        contents: [{
-          parts: [
-            { inline_data: { mime_type: mediaType, data: base64 } },
-            { text: prompt }
-          ]
-        }],
-        generationConfig: { temperature: 0, maxOutputTokens: 500 }
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: prompt }
+        ]}]
       })
     });
 
-    if (resp.status === 400 || resp.status === 403) {
-      const errData = await resp.json().catch(() => ({}));
-      const msg = errData?.error?.message || 'HTTP ' + resp.status;
-      showToast('API Key Error: ' + msg.slice(0,60), 'var(--danger)');
-      analyzeBtn.disabled = false;
-      addBtn.disabled = false;
-      processingBar.classList.remove('active');
-      return;
-    }
-
-    if (!resp.ok) {
-      const errData = await resp.json().catch(() => ({}));
-      const msg = errData?.error?.message || 'HTTP ' + resp.status;
-      showToast('API Error: ' + msg.slice(0,60), 'var(--danger)');
-      analyzeBtn.disabled = false;
-      addBtn.disabled = false;
-      processingBar.classList.remove('active');
-      return;
-    }
     const data = await resp.json();
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+    const raw = data.content?.find(b => b.type === 'text')?.text || '{}';
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
-    let extracted = 0;
-    if (parsed.asset_tag && parsed.asset_tag !== 'null' && parsed.asset_tag !== null) {
-      setFieldGreen('fieldAssetTag', String(parsed.asset_tag));
-      extracted++;
-    }
-    if (parsed.serial && parsed.serial !== 'null' && parsed.serial !== null) {
-      setFieldGreen('fieldSerial', String(parsed.serial));
-      extracted++;
-    }
+    let n = 0;
+    if (parsed.asset_tag && parsed.asset_tag !== 'null') { setGreen('fieldAssetTag', String(parsed.asset_tag)); n++; }
+    if (parsed.serial && parsed.serial !== 'null') { setGreen('fieldSerial', String(parsed.serial)); n++; }
 
-    analyzeBtn.disabled = false;
-    addBtn.disabled = false;
-
-    if (extracted === 0) {
-      showToast('No data found — retake photo or fill manually', 'var(--accent2)');
-    } else {
-      showToast('✓ ' + extracted + ' field' + (extracted > 1 ? 's' : '') + ' extracted — select model');
-    }
-
+    document.getElementById('addBtn').disabled = false;
+    showToast(n ? '✓ ' + n + ' field' + (n > 1 ? 's' : '') + ' extracted — select model' : 'No data found — fill manually', n ? '' : 'wrn');
   } catch(err) {
-    console.error('Extraction error:', err);
-    showToast('ERROR: ' + (err.message || err.name || 'unknown'), 'var(--danger)');
-    analyzeBtn.disabled = false;
-    addBtn.disabled = false;
+    showToast('Extraction failed — fill manually', 'err');
+    document.getElementById('addBtn').disabled = false;
   } finally {
-    processingBar.classList.remove('active');
+    document.getElementById('processingBar').classList.remove('active');
   }
 }
 
-function setFieldGreen(id, val) {
+function setGreen(id, val) {
   const el = document.getElementById(id);
   el.value = val || '';
   el.classList.toggle('populated', !!val);
 }
 
 function clearFields() {
-  ['fieldAssetTag', 'fieldSerial'].forEach(id => setFieldGreen(id, null));
+  ['fieldAssetTag', 'fieldSerial'].forEach(id => setGreen(id, null));
   document.getElementById('fieldModel').value = '';
-  addBtn.disabled = true;
-  analyzeBtn.disabled = true;
-  const preview = document.getElementById('previewImg');
-  preview.src = '';
-  preview.classList.remove('visible');
-  document.getElementById('uploadPlaceholder').style.display = 'flex';
-  document.getElementById('uploadArea').classList.remove('has-image');
-  currentDataUrl = null;
+  document.getElementById('addBtn').disabled = true;
+  recapture();
 }
 
 function addAsset() {
   const tag = document.getElementById('fieldAssetTag').value.trim();
   const model = document.getElementById('fieldModel').value.trim();
   const serial = document.getElementById('fieldSerial').value.trim();
-  if (!model) { showToast('Please select a model', 'var(--accent2)'); return; }
-  if (!tag && !serial) { showToast('Need at least a tag or serial number', 'var(--accent2)'); return; }
+  if (!model) { showToast('Select a model first', 'wrn'); return; }
+  if (!tag && !serial) { showToast('Need tag or serial number', 'wrn'); return; }
   assets.push({ tag, model, serial });
   renderList();
   clearFields();
@@ -431,10 +417,10 @@ function removeAsset(i) {
 
 function renderList() {
   const list = document.getElementById('assetList');
-  if (assets.length === 0) { list.innerHTML = '<div class="empty-list">No assets added yet</div>'; return; }
+  if (!assets.length) { list.innerHTML = '<div class="empty-list">No assets added yet</div>'; return; }
   list.innerHTML = assets.map((a, i) => `
     <div class="asset-item">
-      <div class="asset-info">
+      <div>
         <div class="asset-tag">TAG: ${a.tag || '—'}</div>
         <div class="asset-detail">MODEL: ${a.model || '—'}<br>S/N: ${a.serial || '—'}</div>
       </div>
@@ -443,13 +429,13 @@ function renderList() {
 }
 
 function buildCSV() {
-  const headers = ['Action','Name','Asset Tag','Manufacturer','Serial #','Model','Location','Status','Condition'];
+  const headers = 'Action,Name,Asset Tag,Manufacturer,Serial #,Model,Location,Status,Condition';
   const rows = assets.map(a => {
     const name = ('LENEL ' + (a.model || '') + ' Tag: ' + (a.tag || '')).trim();
     return ['CREATE', name, a.tag||'', 'LENEL', a.serial||'', a.model||'', 'Tysons HQ - 12th Floor Lab', 'Reserved', 'A1']
       .map(v => '"' + v + '"').join(',');
   });
-  return [headers.join(','), ...rows].join('\n');
+  return [headers, ...rows].join('\n');
 }
 
 function downloadCSV(csv) {
@@ -458,17 +444,15 @@ function downloadCSV(csv) {
   const a = document.createElement('a');
   a.href = url;
   a.download = 'FAA_Assets_Import_' + new Date().toISOString().slice(0,10) + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
 async function finishAndSend() {
-  if (assets.length === 0) { showToast('No assets added yet', 'var(--accent2)'); return; }
+  if (!assets.length) { showToast('No assets added yet', 'wrn'); return; }
   const csv = buildCSV();
   downloadCSV(csv);
-  showToast('Sending email...', 'var(--accent)');
+  showToast('Sending email...', '');
   try {
     await emailjs.send(EJS_SERVICE_ID, EJS_TEMPLATE_ID, {
       to_email: RECIPIENT_EMAIL,
@@ -478,8 +462,7 @@ async function finishAndSend() {
     });
     showToast('✓ Email sent & CSV downloaded!');
   } catch(err) {
-    console.error('EmailJS error:', err);
-    showToast('Email failed — CSV downloaded to device', 'var(--danger)');
+    showToast('Email failed — CSV downloaded to device', 'err');
   }
 }
 </script>
