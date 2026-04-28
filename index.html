@@ -2,17 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>FAA Asset Scanner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --border: #21262d;
-    --border2: #30363d;
+    --bg: #0a0e14;
+    --surface: #111820;
+    --border: #1e2d3d;
     --accent: #00d4ff;
     --accent2: #ff6b35;
     --text: #cdd9e5;
@@ -22,7 +20,9 @@
     --mono: 'Share Tech Mono', monospace;
     --display: 'Barlow Condensed', sans-serif;
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
     background: var(--bg);
     color: var(--text);
@@ -31,7 +31,6 @@
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
-    -webkit-text-size-adjust: 100%;
   }
 
   .header {
@@ -46,104 +45,275 @@
     z-index: 100;
   }
   .header-left { display: flex; align-items: center; gap: 10px; }
-  .logo { font-family: var(--display); font-weight: 900; font-size: 22px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
-  .logo span { color: var(--accent2); }
-  .badge { background: var(--accent); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 10px; padding: 2px 7px; border-radius: 2px; letter-spacing: 1px; }
-  .scan-count { font-size: 12px; color: var(--muted); }
-  .scan-count span { color: var(--success); }
-
-  main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 700px; margin: 0 auto; width: 100%; }
-
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  .card-label { font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 14px 6px; }
-
-  /* Camera */
-  .cam-wrap { position: relative; background: #000; margin: 0 14px 10px; border-radius: 6px; overflow: hidden; min-height: 220px; display: flex; align-items: center; justify-content: center; }
-  #vid { width: 100%; display: none; border-radius: 6px; }
-  #vid.on { display: block; }
-  #snap { width: 100%; display: none; border-radius: 6px; }
-  #snap.on { display: block; }
-
-  .cam-placeholder { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 20px; }
-  .cam-icon { font-size: 36px; }
-  .cam-sub { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
-
-  .start-btn {
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    border-radius: 8px;
+  .logo {
     font-family: var(--display);
     font-weight: 900;
     font-size: 22px;
-    letter-spacing: 3px;
-    padding: 18px 48px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .logo span { color: var(--accent2); }
+  .badge {
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+  .scan-count { font-size: 12px; color: var(--muted); }
+  .scan-count span { color: var(--success); }
+
+  main {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .camera-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .section-label {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 14px 0;
+  }
+
+  #videoContainer {
+    position: relative;
+    background: #000;
+    width: 100%;
+    aspect-ratio: 4/3;
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    overflow: hidden;
   }
-  .start-btn:hover { background: #00bfeb; }
-  .start-btn:active { transform: scale(0.97); }
-  .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #videoEl {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .camera-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .cam-icon { font-size: 40px; }
 
-  .corners { position: absolute; inset: 20px; pointer-events: none; }
-  .corner { position: absolute; width: 20px; height: 20px; border-color: var(--accent); border-style: solid; opacity: 0.8; }
+  .corners { position: absolute; inset: 16px; pointer-events: none; }
+  .corner {
+    position: absolute;
+    width: 20px; height: 20px;
+    border-color: var(--accent);
+    border-style: solid;
+    opacity: 0.7;
+  }
   .corner.tl { top:0; left:0; border-width: 2px 0 0 2px; }
   .corner.tr { top:0; right:0; border-width: 2px 2px 0 0; }
   .corner.bl { bottom:0; left:0; border-width: 0 0 2px 2px; }
   .corner.br { bottom:0; right:0; border-width: 0 2px 2px 0; }
-  .scan-line { position: absolute; left:10%; right:10%; height:2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanMove 2s ease-in-out infinite; display: none; opacity: 0.8; }
-  @keyframes scanMove { 0%{top:15%;opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{top:85%;opacity:0;} }
 
-  .processing-bar { display: none; align-items: center; gap: 10px; padding: 8px 14px; background: rgba(0,212,255,0.06); border-top: 1px solid var(--border); }
-  .processing-bar.active { display: flex; }
-  .spinner { width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .processing-text { font-family: var(--display); font-size: 13px; letter-spacing: 1px; color: var(--accent); }
+  .scan-line {
+    position: absolute;
+    left: 10%; right: 10%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: scanMove 2s ease-in-out infinite;
+    display: none;
+    opacity: 0.8;
+  }
+  @keyframes scanMove {
+    0% { top: 15%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 85%; opacity: 0; }
+  }
 
-  .cam-controls { display: flex; gap: 10px; padding: 8px 14px 14px; }
+  .camera-controls {
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
   #fileInput { display: none; }
 
-  .btn { flex: 1; padding: 11px 12px; border: none; border-radius: 5px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; -webkit-appearance: none; text-align: center; }
-  .btn-capture { background: #1a3a1a; border: 1px solid var(--success); color: var(--success); font-size: 16px; padding: 13px; }
-  .btn-capture:hover { background: #223322; }
-  .btn-capture:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
-  .btn-outline:hover { background: rgba(0,212,255,0.08); }
-  .btn-danger { background: #3d1a1a; border: 1px solid var(--danger); color: #ff6b6b; width: 100%; }
-  .btn-danger:hover { background: #4d2020; }
+  .btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 4px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { filter: brightness(1.15); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn-secondary:hover { background: rgba(0,212,255,0.08); }
+  .btn-danger { background: var(--danger); color: #fff; width: 100%; }
+  .btn-danger:hover { filter: brightness(1.1); }
 
-  /* Fields */
-  .fields-wrap { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .processing-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(10,14,20,0.85);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    font-family: var(--display);
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .fields-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+  }
+  .fields-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
   .field-row { display: flex; flex-direction: column; gap: 4px; }
-  .field-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
-  .field-value { background: var(--bg); border: 1px solid var(--border2); border-radius: 4px; padding: 9px 10px; font-family: var(--mono); font-size: 14px; color: var(--text); width: 100%; outline: none; transition: border-color 0.15s; -webkit-appearance: none; appearance: none; }
+  .field-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .field-value {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px 10px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
   .field-value:focus { border-color: var(--accent); }
   .field-value.populated { border-color: var(--success); color: var(--success); }
-  select.field-value { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2300d4ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 26px; cursor: pointer; }
-  select.field-value option { background: var(--surface); color: var(--text); }
-  .btn-add { background: #1a2a1a; border: 1px solid var(--success); color: var(--success); border-radius: 5px; font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px; padding: 11px; cursor: pointer; width: 100%; transition: background 0.15s; }
-  .btn-add:hover { background: #223322; }
-  .btn-add:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  /* Asset list */
-  .asset-section { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 8px; }
-  .asset-item { background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; padding: 10px 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; animation: slideIn 0.2s ease; }
-  @keyframes slideIn { from{opacity:0;transform:translateX(-6px);} to{opacity:1;transform:translateX(0);} }
+  .assets-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+  }
+  .assets-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .asset-list { display: flex; flex-direction: column; gap: 8px; }
+  .asset-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: 10px;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .asset-info { flex: 1; }
   .asset-tag { color: var(--accent); font-size: 13px; font-weight: bold; }
-  .asset-detail { color: var(--muted); font-size: 11px; margin-top: 3px; line-height: 1.6; }
-  .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0; line-height: 1; }
+  .asset-detail { color: var(--muted); margin-top: 2px; }
+  .remove-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    line-height: 1;
+  }
   .remove-btn:hover { color: var(--danger); }
-  .empty-list { text-align: center; color: var(--muted); font-size: 12px; padding: 22px; border: 1px dashed var(--border); border-radius: 5px; }
 
-  .actions-section { display: flex; flex-direction: column; gap: 10px; padding-bottom: 40px; }
+  .empty-list {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 20px;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+  }
 
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: 1px; padding: 12px 22px; border-radius: 5px; transition: transform 0.3s ease; z-index: 200; max-width: 88vw; text-align: center; background: var(--success); color: var(--bg); }
+  .actions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 30px;
+  }
+  .email-row { display: flex; flex-direction: column; gap: 4px; }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--success);
+    color: var(--bg);
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    padding: 10px 20px;
+    border-radius: 4px;
+    transition: transform 0.3s ease;
+    z-index: 200;
+    white-space: nowrap;
+  }
   .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.err { background: var(--danger); color: #fff; }
-  .toast.wrn { background: var(--accent2); color: #fff; }
 
   canvas { display: none; }
 </style>
@@ -160,73 +330,74 @@
 
 <main>
 
-  <!-- Camera Card -->
-  <div class="card">
-    <div class="card-label">◈ CAMERA INPUT</div>
-    <div class="cam-wrap" id="camWrap">
-      <video id="vid" autoplay playsinline muted></video>
-      <img id="snap" alt="Captured frame">
-      <div class="cam-placeholder" id="camPlaceholder">
+  <div class="camera-section">
+    <div class="section-label">◈ CAMERA / IMAGE INPUT</div>
+    <div id="videoContainer">
+      <video id="videoEl" autoplay playsinline muted></video>
+      <div class="camera-placeholder" id="camPlaceholder">
         <div class="cam-icon">📷</div>
-        <button class="start-btn" id="startBtn" onclick="startCamera()">
-          ▶&nbsp; START CAMERA
-        </button>
-        <div class="cam-sub">Click the button above to activate your webcam<br>Allow camera access when the browser asks</div>
+        <div>Tap START CAMERA or upload image</div>
       </div>
-      <div class="corners" id="corners" style="display:none;">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
+      <div class="corners">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
       </div>
       <div class="scan-line" id="scanLine"></div>
+      <div class="processing-overlay" id="processingOverlay">
+        <div class="spinner"></div>
+        <div>ANALYZING...</div>
+      </div>
     </div>
-    <div class="processing-bar" id="processingBar">
-      <div class="spinner"></div>
-      <div class="processing-text">READING LABEL — PLEASE WAIT...</div>
-    </div>
-    <div class="cam-controls">
-      <button class="btn btn-capture" id="captureBtn" onclick="doCapture()" disabled>⊙ Capture</button>
-      <label class="btn btn-outline" style="display:flex;align-items:center;justify-content:center;cursor:pointer;">
-        ↑ Upload photo
-        <input type="file" id="fileInput" accept="image/*" onchange="doUpload(event)">
+    <div class="camera-controls">
+      <button class="btn btn-primary" id="startCamBtn" onclick="startCamera()">▶ Start Camera</button>
+      <button class="btn btn-secondary" id="captureBtn" onclick="captureFrame()" disabled>⊙ Capture</button>
+      <label class="btn btn-secondary" style="text-align:center;line-height:2;">
+        ↑ Upload
+        <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
       </label>
     </div>
   </div>
 
-  <!-- Extracted Fields -->
-  <div class="card">
-    <div class="card-label">◈ EXTRACTED DATA</div>
-    <div class="fields-wrap">
+  <div class="fields-section">
+    <div class="section-label">◈ EXTRACTED DATA</div>
+    <div class="fields-grid">
       <div class="field-row">
-        <div class="field-label">Asset Tag — Property of FAA #</div>
-        <input class="field-value" id="fieldAssetTag" placeholder="e.g. 117521" />
+        <div class="field-label">Asset Tag (Property of FAA #)</div>
+        <input class="field-value" id="fieldAssetTag" placeholder="—" />
       </div>
       <div class="field-row">
         <div class="field-label">Part No / Model</div>
-        <select class="field-value" id="fieldModel">
-          <option value="">— Select model —</option>
-          <option value="'UTR-9202ABTRLNL">'UTR-9202ABTRLNL</option>
-          <option value="'LNL-1320-S3">'LNL-1320-S3</option>
-        </select>
+        <input class="field-value" id="fieldModel" placeholder="—" />
       </div>
       <div class="field-row">
         <div class="field-label">Serial No</div>
-        <input class="field-value" id="fieldSerial" placeholder="e.g. 82162523700767" />
+        <input class="field-value" id="fieldSerial" placeholder="—" />
       </div>
-      <button class="btn-add" id="addBtn" onclick="addAsset()" disabled>+ ADD TO LIST</button>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-primary" style="width:100%" onclick="addAsset()" id="addBtn" disabled>+ ADD TO LIST</button>
     </div>
   </div>
 
-  <!-- Scan List -->
-  <div class="card">
-    <div class="card-label">◈ SCAN LIST</div>
-    <div class="asset-section" id="assetList">
-      <div class="empty-list">No assets added yet</div>
+  <div class="assets-section">
+    <div class="assets-header">
+      <div class="section-label" style="padding:0">◈ SCAN LIST</div>
+    </div>
+    <div class="asset-list" id="assetList">
+      <div class="empty-list" id="emptyMsg">No assets scanned yet</div>
     </div>
   </div>
 
-  <!-- End Session -->
   <div class="actions-section">
-    <button class="btn btn-danger" onclick="finishAndSend()">■ END SESSION &amp; SEND CSV</button>
+    <div class="email-row">
+      <div class="field-label">◈ SEND CSV TO EMAIL</div>
+      <input class="field-value" id="emailInput" type="email" placeholder="recipient@example.com" style="font-size:14px;" />
+    </div>
+    <button class="btn btn-danger" onclick="finishAndSend()">
+      ■ END SESSION &amp; SEND CSV
+    </button>
   </div>
 
 </main>
@@ -235,178 +406,141 @@
 <div class="toast" id="toast"></div>
 
 <script>
-let assets = [];
 let stream = null;
-let currentDataUrl = null;
+let assets = [];
 
-const EJS_PUBLIC_KEY  = '0ICfn2KzfPvExfqhT';
-const EJS_SERVICE_ID  = 'FAA SCANNER';
-const EJS_TEMPLATE_ID = 'template_8scskqp';
-const RECIPIENT_EMAIL = 'adanahz55@gmail.com';
+const video = document.getElementById('videoEl');
+const captureBtn = document.getElementById('captureBtn');
+const startCamBtn = document.getElementById('startCamBtn');
+const processingOverlay = document.getElementById('processingOverlay');
+const scanLine = document.getElementById('scanLine');
+const camPlaceholder = document.getElementById('camPlaceholder');
+const addBtn = document.getElementById('addBtn');
 
-emailjs.init(EJS_PUBLIC_KEY);
-
-function showToast(msg, type) {
+function showToast(msg, color) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast' + (type ? ' ' + type : '');
+  t.style.background = color || 'var(--success)';
+  t.style.color = color ? '#fff' : 'var(--bg)';
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3200);
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
 async function startCamera() {
-  const btn = document.getElementById('startBtn');
-  btn.textContent = 'Starting...';
-  btn.disabled = true;
   try {
-    if (stream) stream.getTracks().forEach(t => t.stop());
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1920 }, height: { ideal: 1080 } }
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
     });
-    const vid = document.getElementById('vid');
-    vid.srcObject = stream;
-    await vid.play();
-    vid.classList.add('on');
-    document.getElementById('snap').classList.remove('on');
-    document.getElementById('camPlaceholder').style.display = 'none';
-    document.getElementById('corners').style.display = 'block';
-    document.getElementById('scanLine').style.display = 'block';
-    document.getElementById('captureBtn').disabled = false;
+    video.srcObject = stream;
+    video.style.display = 'block';
+    camPlaceholder.style.display = 'none';
+    scanLine.style.display = 'block';
+    captureBtn.disabled = false;
+    startCamBtn.textContent = '◉ Camera On';
+    startCamBtn.style.background = 'var(--success)';
+    startCamBtn.style.color = 'var(--bg)';
   } catch(e) {
-    btn.textContent = '▶  START CAMERA';
-    btn.disabled = false;
-    if (e.name === 'NotAllowedError') showToast('Camera blocked — enable in browser address bar', 'err');
-    else if (e.name === 'NotFoundError') showToast('No camera found — use Upload instead', 'wrn');
-    else showToast('Camera error: ' + e.message, 'err');
+    showToast('Camera unavailable — use Upload', 'var(--accent2)');
   }
 }
 
-function doCapture() {
-  const vid = document.getElementById('vid');
-  if (!vid.videoWidth) { showToast('Camera not ready yet', 'wrn'); return; }
+function captureFrame() {
   const canvas = document.getElementById('captureCanvas');
-  canvas.width = vid.videoWidth;
-  canvas.height = vid.videoHeight;
-  canvas.getContext('2d').drawImage(vid, 0, 0);
-  const du = canvas.toDataURL('image/jpeg', 0.95);
-  showSnap(du);
-  analyzeImage(du);
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  analyzeImage(dataUrl);
 }
 
-function doUpload(e) {
-  const file = e.target.files[0]; if (!file) return;
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.getElementById('captureCanvas');
-      const MAX = 2400;
-      let w = img.width, h = img.height;
-      if (w > MAX || h > MAX) {
-        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-        else { w = Math.round(w * MAX / h); h = MAX; }
-      }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const du = canvas.toDataURL('image/jpeg', 0.95);
-      showSnap(du);
-      analyzeImage(du);
-    };
-    img.src = ev.target.result;
-  };
+  reader.onload = ev => analyzeImage(ev.target.result);
   reader.readAsDataURL(file);
   e.target.value = '';
 }
 
-function showSnap(du) {
-  currentDataUrl = du;
-  const snap = document.getElementById('snap');
-  snap.src = du; snap.classList.add('on');
-  document.getElementById('vid').classList.remove('on');
-  document.getElementById('scanLine').style.display = 'none';
-  const cb = document.getElementById('captureBtn');
-  cb.textContent = '↺ Recapture';
-  cb.onclick = recapture;
-}
-
-function recapture() {
-  if (!stream) { showToast('Start camera first', 'wrn'); return; }
-  document.getElementById('vid').classList.add('on');
-  document.getElementById('snap').classList.remove('on');
-  document.getElementById('scanLine').style.display = 'block';
-  const cb = document.getElementById('captureBtn');
-  cb.textContent = '⊙ Capture';
-  cb.onclick = doCapture;
-}
-
 async function analyzeImage(dataUrl) {
-  document.getElementById('processingBar').classList.add('active');
-  document.getElementById('addBtn').disabled = true;
-
+  processingOverlay.style.display = 'flex';
   const base64 = dataUrl.split(',')[1];
   const mediaType = dataUrl.split(';')[0].split(':')[1];
-  const prompt = 'Extract data from this M.C. Dean FAA label photo. FIELD 1 asset_tag: Find the small WHITE sticker with M.C. DEAN logo, words Property of FAA, and a large bold NUMBER directly below (6 digits e.g. 117521). Return that number. If not visible return null. FIELD 2 serial: Find the BLUE/TEAL label, locate the row labeled Serial No, read the value on the right digit by digit (14 digits e.g. 82162523700767). Do NOT return the barcode number at the bottom. Do NOT return PO No. If N/A or not visible return null. Return ONLY JSON: {"asset_tag":"<number or null>","serial":"<number or null>"}';
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-          { type: 'text', text: prompt }
-        ]}]
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: base64 }
+            },
+            {
+              type: 'text',
+              text: `Extract these fields from the label/image. Return ONLY valid JSON, no markdown, no extra text:
+{
+  "asset_tag": "<the number under 'Property of FAA' on asset tag labels, OR the Asset Tag field value, or null>",
+  "model": "<Part No or model number, e.g. UTR-9216ABTRLNL, or null>",
+  "serial": "<Serial No value, or null>"
+}
+If a field is not visible or not applicable, use null.`
+            }
+          ]
+        }]
       })
     });
 
     const data = await resp.json();
-    const raw = data.content?.find(b => b.type === 'text')?.text || '{}';
-    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    const text = data.content?.find(b => b.type === 'text')?.text || '{}';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
 
-    let n = 0;
-    if (parsed.asset_tag && parsed.asset_tag !== 'null') { setGreen('fieldAssetTag', String(parsed.asset_tag)); n++; }
-    if (parsed.serial && parsed.serial !== 'null') { setGreen('fieldSerial', String(parsed.serial)); n++; }
+    setField('fieldAssetTag', parsed.asset_tag);
+    setField('fieldModel', parsed.model);
+    setField('fieldSerial', parsed.serial);
 
-    document.getElementById('addBtn').disabled = false;
-    showToast(n ? '✓ ' + n + ' field' + (n > 1 ? 's' : '') + ' extracted — select model' : 'No data found — fill manually', n ? '' : 'wrn');
+    addBtn.disabled = false;
+    showToast('✓ Data extracted');
   } catch(err) {
-    showToast('Extraction failed — fill manually', 'err');
-    document.getElementById('addBtn').disabled = false;
+    showToast('Extraction failed — edit manually', 'var(--accent2)');
+    addBtn.disabled = false;
   } finally {
-    document.getElementById('processingBar').classList.remove('active');
+    processingOverlay.style.display = 'none';
   }
 }
 
-function setGreen(id, val) {
+function setField(id, val) {
   const el = document.getElementById(id);
   el.value = val || '';
   el.classList.toggle('populated', !!val);
 }
 
 function clearFields() {
-  ['fieldAssetTag', 'fieldSerial'].forEach(id => setGreen(id, null));
-  document.getElementById('fieldModel').value = '';
-  document.getElementById('addBtn').disabled = true;
-  recapture();
+  ['fieldAssetTag','fieldModel','fieldSerial'].forEach(id => setField(id, null));
+  addBtn.disabled = true;
 }
 
 function addAsset() {
   const tag = document.getElementById('fieldAssetTag').value.trim();
   const model = document.getElementById('fieldModel').value.trim();
   const serial = document.getElementById('fieldSerial').value.trim();
-  if (!model) { showToast('Select a model first', 'wrn'); return; }
-  if (!tag && !serial) { showToast('Need tag or serial number', 'wrn'); return; }
+
+  if (!tag && !model && !serial) {
+    showToast('Nothing to add', 'var(--accent2)');
+    return;
+  }
+
   assets.push({ tag, model, serial });
   renderList();
   clearFields();
   document.getElementById('countDisplay').textContent = assets.length;
-  showToast('✓ Asset ' + (tag || serial) + ' added');
+  showToast(`Asset ${tag || model} added`);
 }
 
 function removeAsset(i) {
@@ -417,54 +551,61 @@ function removeAsset(i) {
 
 function renderList() {
   const list = document.getElementById('assetList');
-  if (!assets.length) { list.innerHTML = '<div class="empty-list">No assets added yet</div>'; return; }
+  if (assets.length === 0) {
+    list.innerHTML = '<div class="empty-list">No assets scanned yet</div>';
+    return;
+  }
   list.innerHTML = assets.map((a, i) => `
     <div class="asset-item">
-      <div>
+      <div class="asset-info">
         <div class="asset-tag">TAG: ${a.tag || '—'}</div>
-        <div class="asset-detail">MODEL: ${a.model || '—'}<br>S/N: ${a.serial || '—'}</div>
+        <div class="asset-detail">MODEL: ${a.model || '—'} | S/N: ${a.serial || '—'}</div>
       </div>
       <button class="remove-btn" onclick="removeAsset(${i})">✕</button>
-    </div>`).join('');
+    </div>
+  `).join('');
 }
 
 function buildCSV() {
-  const headers = 'Action,Name,Asset Tag,Manufacturer,Serial #,Model,Location,Status,Condition';
+  const headers = ['Action','Name','Asset Tag','Manufacturer','Serial #','Model','Location','Status','Condition'];
   const rows = assets.map(a => {
-    const name = ('LENEL ' + (a.model || '') + ' Tag: ' + (a.tag || '')).trim();
-    return ['CREATE', name, a.tag||'', 'LENEL', a.serial||'', a.model||'', 'Tysons HQ - 12th Floor Lab', 'Reserved', 'A1']
-      .map(v => '"' + v + '"').join(',');
+    const name = `LENEL ${a.model || ''} Tag: ${a.tag || ''}`.trim();
+    return [
+      'CREATE', name, a.tag || '', 'LENEL', a.serial || '',
+      a.model || '', 'Tysons HQ - 12th Floor Lab', 'Reserved', 'A1'
+    ].map(v => `"${v}"`).join(',');
   });
-  return [headers, ...rows].join('\n');
+  return [headers.join(','), ...rows].join('\n');
 }
 
-function downloadCSV(csv) {
+function finishAndSend() {
+  if (assets.length === 0) {
+    showToast('No assets scanned yet', 'var(--accent2)');
+    return;
+  }
+
+  const email = document.getElementById('emailInput').value.trim();
+  const csv = buildCSV();
+
+  // Download CSV
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'FAA_Assets_Import_' + new Date().toISOString().slice(0,10) + '.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  a.download = `FAA_Assets_Import_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
   URL.revokeObjectURL(url);
-}
 
-async function finishAndSend() {
-  if (!assets.length) { showToast('No assets added yet', 'wrn'); return; }
-  const csv = buildCSV();
-  downloadCSV(csv);
-  showToast('Sending email...', '');
-  try {
-    await emailjs.send(EJS_SERVICE_ID, EJS_TEMPLATE_ID, {
-      to_email: RECIPIENT_EMAIL,
-      subject: 'FAA Asset Import - ' + assets.length + ' Assets - ' + new Date().toLocaleDateString(),
-      message: 'Assets captured: ' + assets.length + '\nDate: ' + new Date().toLocaleString() + '\n\n--- ASSET LIST ---\n' + assets.map(a => 'Tag: ' + a.tag + ' | Model: ' + a.model + ' | S/N: ' + a.serial).join('\n'),
-      csv_data: csv
-    });
-    showToast('✓ Email sent & CSV downloaded!');
-  } catch(err) {
-    showToast('Email failed — CSV downloaded to device', 'err');
+  // Open mailto if email provided
+  if (email) {
+    const subject = encodeURIComponent(`FAA Asset Import - ${assets.length} Assets - ${new Date().toLocaleDateString()}`);
+    const body = encodeURIComponent(`Please find the attached FAA Asset Import CSV.\n\nAssets scanned: ${assets.length}\nDate: ${new Date().toLocaleString()}\n\nNote: CSV has been downloaded to your device. Please attach it to this email.\n\n--- ASSET LIST ---\n${assets.map(a => `Tag: ${a.tag} | Model: ${a.model} | S/N: ${a.serial}`).join('\n')}`);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   }
+
+  showToast(`✓ CSV downloaded (${assets.length} assets)`);
 }
 </script>
+
 </body>
 </html>
