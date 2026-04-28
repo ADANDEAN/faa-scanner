@@ -235,7 +235,7 @@ async function startCamera() {
   btn.textContent = 'Starting...'; btn.disabled = true;
   try {
     if (stream) stream.getTracks().forEach(t => t.stop());
-    stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } } });
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
     const vid = document.getElementById('vid');
     vid.srcObject = stream; await vid.play();
     vid.classList.add('on');
