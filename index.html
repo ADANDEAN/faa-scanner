@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
     --bg: #0d1117;
@@ -511,13 +510,7 @@ window.addEventListener('load', () => {
 let assets = [], stream = null, tesseractWorker = null;
 let savedFiles = []; // { id, name, csv, savedAt, expiresAt }
 
-const EJS_PUBLIC_KEY = '0ICfn2KzfPvExfqhT';
-const EJS_SERVICE_ID = 'FAA SCANNER';
-const EJS_TEMPLATE_ID = 'template_8scskqp';
-const RECIPIENT_EMAIL = 'adanahz55@gmail.com';
 const FILE_TTL_MS = 30 * 60 * 1000; // 30 minutes
-
-emailjs.init(EJS_PUBLIC_KEY);
 
 // ============ TABS ============
 function switchTab(name) {
@@ -685,9 +678,12 @@ async function processImage(dataUrl) {
     setProgress(95, 'PARSING TEXT...');
     const rawText = result.data.text;
 
+    // Build word-level bounding box list (helps locate FAA sticker spatially)
+    const words = (result.data.words || []).filter(w => w.text && w.text.trim());
+
     document.getElementById('debugPre').textContent = rawText || '(no text detected)';
 
-    const { assetTag, serial, modelValue } = parseLabel(rawText);
+    const { assetTag, serial, modelValue } = parseLabel(rawText, words);
 
     let n = 0;
     if (assetTag) { setGreen('fieldAssetTag', assetTag); n++; }
@@ -695,7 +691,6 @@ async function processImage(dataUrl) {
     if (modelValue) {
       const sel = document.getElementById('fieldModel');
       sel.value = modelValue;
-      // If the value matches an option, count it
       if (sel.value === modelValue) n++;
     }
 
@@ -721,41 +716,85 @@ async function processImage(dataUrl) {
 // BRANCH 2 — UTR-9216 / UTR-9202 / LNL-1320 (M.C. Dean blue label format)
 // BRANCH ? — fallback for unknown labels
 
-function parseLabel(text) {
+function parseLabel(text, words) {
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   const upperText = text.toUpperCase();
   let assetTag = null, serial = null, modelValue = null;
 
-  // -------- ASSET TAG (universal — same sticker on all assets) --------
-  // The asset tag is a 6-digit number on a small WHITE sticker that has
-  // "Property of FAA" written above it (e.g. 117520, 117521, 117522).
-  // It is NEVER on the blue M.C. Dean label.
+  // -------- ASSET TAG (universal — works for ALL reader types) --------
+  // The "Property of FAA" sticker is identifiable by:
+  //   - Contains the word "Property" (anchor #1)
+  //   - Contains "FAA" (anchor #2)
+  //   - Has a QR code on the right side
+  //   - The 6-digit asset tag is BELOW these words
   //
-  // Strategy: find a line containing "Property" — not just "FAA" — to avoid
-  // matching the "FAAMIG" or "FAA PSEMS MIGRATION" header text on the blue label.
-  for (let i = 0; i < lines.length; i++) {
-    if (/property/i.test(lines[i])) {
-      // Look on this line + next 2 lines for a clean 6-digit number
-      for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
-        // Match a standalone 6-digit number (not part of a longer string)
-        const m = lines[j].match(/(?:^|\s)(\d{6})(?:\s|$)/) || lines[j].match(/\b(\d{6})\b/);
-        if (m) {
-          // Sanity check: reject obvious non-tag numbers
-          // (must not be inside something like "FAAMIG-003" or have surrounding text suggesting it's part of a code)
-          const num = m[1];
-          // Reject if line contains FAAMIG, PSEMS, MIGRATION, MMC-RD, or similar header text
-          if (/faamig|psems|migration|mmc-rd|po\s*no|csi|neca/i.test(lines[j])) continue;
-          assetTag = num;
-          break;
-        }
+  // Strategy (in priority order):
+  //   1. SPATIAL: Use word bounding boxes to find a 6-digit number
+  //      that is geometrically near "Property" / "FAA" words
+  //      (same column area, slightly below)
+  //   2. TEXT-ROW: Fall back to line-based detection (current method)
+  //   3. STANDALONE: Last resort, find a 6-digit number on its own line
+
+  // ---- Strategy 1: SPATIAL (using word bounding boxes from OCR) ----
+  if (words && words.length) {
+    // Find the bounding box of the Property/FAA sticker
+    const stickerWords = words.filter(w => /property|^FAA$/i.test(w.text));
+    if (stickerWords.length) {
+      // Compute the sticker's approximate bounding box
+      const minX = Math.min(...stickerWords.map(w => w.bbox.x0));
+      const maxX = Math.max(...stickerWords.map(w => w.bbox.x1));
+      const minY = Math.min(...stickerWords.map(w => w.bbox.y0));
+      const maxY = Math.max(...stickerWords.map(w => w.bbox.y1));
+
+      const stickerHeight = maxY - minY;
+      const stickerWidth = maxX - minX;
+
+      // The asset tag is below the "Property of FAA" text but still close.
+      // Allow a search box that extends ~3x the height downward, and 2x the width horizontally
+      const searchMinX = minX - stickerWidth * 0.3;
+      const searchMaxX = maxX + stickerWidth * 0.3;
+      const searchMinY = minY;
+      const searchMaxY = maxY + stickerHeight * 4;
+
+      // Find candidate 6-digit numbers in this region
+      const candidates = words.filter(w => {
+        if (!/^\d{6}$/.test(w.text.trim())) return false;
+        const cx = (w.bbox.x0 + w.bbox.x1) / 2;
+        const cy = (w.bbox.y0 + w.bbox.y1) / 2;
+        return cx >= searchMinX && cx <= searchMaxX &&
+               cy >= searchMinY && cy <= searchMaxY;
+      });
+
+      if (candidates.length) {
+        // Pick the one CLOSEST to the Property/FAA anchor (smallest y-distance below)
+        candidates.sort((a, b) => {
+          const ay = (a.bbox.y0 + a.bbox.y1) / 2;
+          const by = (b.bbox.y0 + b.bbox.y1) / 2;
+          // Prefer candidates BELOW the anchor (positive distance)
+          return Math.abs(ay - maxY) - Math.abs(by - maxY);
+        });
+        assetTag = candidates[0].text.trim();
       }
-      if (assetTag) break;
     }
   }
 
-  // Fallback: only used if "Property" wasn't found at all on the page.
-  // Look for a STANDALONE 6-digit number on its own line, ignoring lines
-  // that contain header/code text we know never have asset tags.
+  // ---- Strategy 2: TEXT-ROW (line-based, ignoring blue-label header rows) ----
+  if (!assetTag) {
+    for (let i = 0; i < lines.length; i++) {
+      if (/property/i.test(lines[i])) {
+        // Look on this line + next 2 lines for a clean 6-digit number
+        for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
+          // Reject blue-label header / metadata rows
+          if (/faamig|psems|migration|mmc-rd|po\s*no|csi|neca/i.test(lines[j])) continue;
+          const m = lines[j].match(/(?:^|\s)(\d{6})(?:\s|$)/) || lines[j].match(/\b(\d{6})\b/);
+          if (m) { assetTag = m[1]; break; }
+        }
+        if (assetTag) break;
+      }
+    }
+  }
+
+  // ---- Strategy 3: STANDALONE 6-digit number on its own line ----
   if (!assetTag) {
     for (const line of lines) {
       // Skip lines that contain known non-asset-tag text
@@ -763,13 +802,11 @@ function parseLabel(text) {
       // Skip date-looking lines
       if (/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(line)) continue;
 
-      // Match a standalone 6-digit number that is not adjacent to other digits
       const m = line.match(/^\s*(\d{6})\s*$/) ||
                 line.match(/(?:^|[^\d-])(\d{6})(?:[^\d-]|$)/);
       if (m) {
         const num = m[1];
         const allNums = line.match(/\d+/g) || [];
-        // Only take it if this is the only/dominant number on the line
         if (allNums.length === 1 || (allNums.length <= 2 && allNums.includes(num))) {
           assetTag = num;
           break;
@@ -1023,30 +1060,19 @@ function renderSavedFiles() {
 }
 
 // ============ END SESSION ============
-async function finishAndSend() {
+function finishAndSend() {
   if (!assets.length) { showToast('No assets added yet', 'wrn'); return; }
   const csv = buildCSV();
   const count = assets.length;
 
-  // Save the file to the saved-files store
+  // Save to the saved-files store
   saveFile(csv, count);
 
-  // Also download immediately
+  // Trigger immediate download
   const name = 'FAA_Assets_Import_' + new Date().toISOString().slice(0,10) + '.csv';
   downloadCSVBlob(name, csv);
 
-  showToast('Sending email...', '');
-  try {
-    await emailjs.send(EJS_SERVICE_ID, EJS_TEMPLATE_ID, {
-      to_email: RECIPIENT_EMAIL,
-      subject: 'FAA Asset Import - ' + count + ' Assets - ' + new Date().toLocaleDateString(),
-      message: 'Assets: ' + count + '\nDate: ' + new Date().toLocaleString() + '\n\n--- ASSET LIST ---\n' + assets.map(a=>'Tag:'+a.tag+' | Model:'+a.model+' | S/N:'+a.serial).join('\n'),
-      csv_data: csv
-    });
-    showToast('✓ Email sent — file saved for 30 min');
-  } catch(err) {
-    showToast('Email failed — file saved locally', 'err');
-  }
+  showToast('✓ CSV downloaded — saved for 30 min in Saved Files');
 
   // Clear the active scan list
   assets = [];
