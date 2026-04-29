@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js"></script>
+<script async src="https://docs.opencv.org/4.10.0/opencv.js" onload="window.cvReady = true;"></script>
 <style>
   :root {
     --bg: #0d1117;
@@ -26,7 +27,6 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; display: flex; flex-direction: column; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
 
-  /* INTRO ROCKET */
   .intro { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: opacity 0.4s, visibility 0.4s; }
   .intro.hide { opacity: 0; visibility: hidden; pointer-events: none; }
   .sky-stars { position: absolute; inset: 0; background-image: radial-gradient(1px 1px at 20% 30%, var(--accent), transparent), radial-gradient(1px 1px at 60% 70%, rgba(0,212,255,0.5), transparent), radial-gradient(1px 1px at 80% 20%, var(--accent), transparent), radial-gradient(1px 1px at 35% 80%, rgba(255,107,53,0.4), transparent), radial-gradient(1px 1px at 90% 60%, var(--accent), transparent); background-size: 100% 100%; opacity: 0.6; }
@@ -38,13 +38,7 @@
   @keyframes cloudDrift { 0% { transform: translateX(0); } 100% { transform: translateX(-300px); } }
   .runway { position: absolute; bottom: 25%; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent2), transparent); opacity: 0.5; }
   .plane-fly { position: relative; width: 90px; height: 180px; color: var(--accent); animation: planeFlight 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-  @keyframes planeFlight {
-    0% { transform: translate(-100vw, 50vh) rotate(45deg) scale(0.5); opacity: 0; }
-    20% { opacity: 1; }
-    50% { transform: translate(0, 0) rotate(45deg) scale(1); opacity: 1; }
-    80% { transform: translate(25vw, -20vh) rotate(45deg) scale(1.2); opacity: 1; }
-    100% { transform: translate(110vw, -60vh) rotate(45deg) scale(1.6); opacity: 0; }
-  }
+  @keyframes planeFlight { 0% { transform: translate(-100vw, 50vh) rotate(45deg) scale(0.5); opacity: 0; } 20% { opacity: 1; } 50% { transform: translate(0, 0) rotate(45deg) scale(1); opacity: 1; } 80% { transform: translate(25vw, -20vh) rotate(45deg) scale(1.2); opacity: 1; } 100% { transform: translate(110vw, -60vh) rotate(45deg) scale(1.6); opacity: 0; } }
   .contrail { position: absolute; top: 50%; right: 100%; width: 240px; height: 4px; background: linear-gradient(90deg, transparent, rgba(255,107,53,0.6) 50%, var(--accent2)); transform: translateY(-50%) rotate(-45deg); transform-origin: right center; border-radius: 2px; filter: blur(1.5px); }
   .intro-text { position: absolute; bottom: 22%; width: 100%; text-align: center; font-family: var(--display); font-weight: 900; font-size: 28px; letter-spacing: 6px; color: var(--accent); opacity: 0; animation: textIn 0.5s 0.9s ease forwards; }
   .intro-text span { color: var(--accent2); }
@@ -58,6 +52,8 @@
   .badge { background: var(--accent); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 10px; padding: 2px 7px; border-radius: 2px; letter-spacing: 1px; }
   .scan-count { font-size: 12px; color: var(--muted); }
   .scan-count b { color: var(--success); font-weight: 400; }
+  .cv-status { font-size: 9px; color: var(--muted); padding: 2px 6px; border: 1px solid var(--border2); border-radius: 3px; font-family: var(--display); letter-spacing: 1px; }
+  .cv-status.ready { color: var(--success); border-color: var(--success); }
 
   .tabs { display: flex; gap: 4px; padding: 12px 16px 0; max-width: 700px; margin: 0 auto; width: 100%; border-bottom: 1px solid var(--border); }
   .tab { background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: 1.5px; padding: 10px 16px; cursor: pointer; transition: all 0.15s; text-transform: uppercase; }
@@ -85,7 +81,9 @@
   .start-btn:active { transform: scale(0.97); }
   .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* Live guidance overlay */
+  /* Detection overlay canvas — draws bounding boxes on top of video */
+  #detectionCanvas { position: absolute; inset: 0; pointer-events: none; width: 100%; height: 100%; }
+
   .guide-overlay { position: absolute; inset: 0; pointer-events: none; }
   .corners { position: absolute; inset: 16px; }
   .corner { position: absolute; width: 24px; height: 24px; border-color: var(--accent); border-style: solid; opacity: 0.7; transition: border-color 0.3s; }
@@ -96,18 +94,7 @@
   .corners.detected .corner { border-color: var(--success); opacity: 1; }
   .corners.warning .corner { border-color: var(--accent2); opacity: 0.9; }
 
-  /* Status banner showing what's detected live */
-  .status-banner {
-    position: absolute;
-    top: 12px; left: 12px; right: 12px;
-    background: rgba(13, 17, 23, 0.85);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-size: 11px;
-    backdrop-filter: blur(8px);
-    transition: border-color 0.3s;
-  }
+  .status-banner { position: absolute; top: 12px; left: 12px; right: 12px; background: rgba(13, 17, 23, 0.85); border: 1px solid var(--border2); border-radius: 6px; padding: 10px 14px; font-size: 11px; backdrop-filter: blur(8px); transition: border-color 0.3s; pointer-events: none; }
   .status-banner.detecting { border-color: var(--accent2); }
   .status-banner.ready { border-color: var(--success); }
   .status-row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
@@ -117,52 +104,22 @@
   .status-icon.searching { background: var(--accent2); animation: searchPulse 1s ease-in-out infinite; }
   @keyframes searchPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   .status-text { color: var(--text); font-family: var(--mono); font-size: 11px; flex: 1; }
-  .status-value { color: var(--success); font-weight: bold; font-family: var(--mono); }
-  .status-hint { color: var(--accent2); }
+  .status-value { color: var(--success); font-weight: bold; font-family: var(--mono); display: inline-block; padding: 0 4px; background: rgba(57,211,83,0.12); border-radius: 2px; margin-left: 4px; }
 
-  /* Guide hint at bottom */
-  .guide-hint {
-    position: absolute;
-    bottom: 12px; left: 12px; right: 12px;
-    background: rgba(13, 17, 23, 0.9);
-    border: 1px solid var(--accent);
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-family: var(--display);
-    font-size: 12px;
-    letter-spacing: 1.5px;
-    color: var(--accent);
-    text-align: center;
-    backdrop-filter: blur(8px);
-    text-transform: uppercase;
-    transition: all 0.3s;
-  }
+  .guide-hint { position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(13, 17, 23, 0.9); border: 1px solid var(--accent); border-radius: 6px; padding: 8px 12px; font-family: var(--display); font-size: 12px; letter-spacing: 1.5px; color: var(--accent); text-align: center; backdrop-filter: blur(8px); text-transform: uppercase; transition: all 0.3s; pointer-events: none; }
   .guide-hint.success { border-color: var(--success); color: var(--success); }
   .guide-hint.warning { border-color: var(--accent2); color: var(--accent2); }
 
-  /* Detection box highlights — shown when something is found in frame */
-  .detection-box {
-    position: absolute;
-    border: 2px solid var(--success);
-    border-radius: 4px;
-    box-shadow: 0 0 12px rgba(57, 211, 83, 0.5);
-    pointer-events: none;
-    transition: all 0.2s;
-  }
-  .detection-box::after {
-    content: attr(data-label);
-    position: absolute;
-    top: -22px; left: 0;
-    background: var(--success);
-    color: var(--bg);
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 10px;
-    letter-spacing: 1px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    white-space: nowrap;
-  }
+  /* Detection preview panel — shown after capture before extraction */
+  .detection-preview { background: var(--bg); border: 1px solid var(--accent); border-radius: 6px; margin: 0 14px 10px; padding: 12px; display: none; }
+  .detection-preview.active { display: block; animation: slideIn 0.3s ease; }
+  .preview-title { font-family: var(--display); font-size: 11px; letter-spacing: 2px; color: var(--accent); margin-bottom: 8px; }
+  .preview-row { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .preview-row:last-child { border-bottom: none; }
+  .preview-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; min-width: 90px; }
+  .preview-value { font-family: var(--mono); font-size: 13px; color: var(--success); flex: 1; word-break: break-all; }
+  .preview-value.missing { color: var(--accent2); font-style: italic; }
+  .preview-source { font-size: 9px; color: var(--muted); padding: 2px 6px; background: var(--surface); border-radius: 3px; letter-spacing: 0.5px; }
 
   .scan-line { position:absolute;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanMove 2s ease-in-out infinite;display:none;opacity:0.8; }
   @keyframes scanMove { 0%{top:15%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:85%;opacity:0;} }
@@ -179,7 +136,6 @@
 
   .cam-controls { display:flex;gap:10px;padding:8px 14px 14px;flex-wrap:wrap; }
   #fileInput { display:none; }
-
   .btn { flex:1;padding:11px 12px;border:none;border-radius:5px;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.15s;-webkit-appearance:none;text-align:center;min-width:120px; }
   .btn-capture { background:#1a3a1a;border:1px solid var(--success);color:var(--success);font-size:16px;padding:13px; }
   .btn-capture:hover { background:#223322; }
@@ -238,7 +194,7 @@
   .toast.show { transform:translateX(-50%) translateY(0); }
   .toast.err { background:var(--danger);color:#fff; }
   .toast.wrn { background:var(--accent2);color:#fff; }
-  canvas { display:none; }
+  canvas.work { display:none; }
 </style>
 </head>
 <body>
@@ -267,7 +223,10 @@
 
 <div class="header">
   <div class="header-left"><div class="logo">FAA<span>.</span>SCAN</div><div class="badge">M.C. DEAN</div></div>
-  <div class="scan-count">CAPTURED: <b id="countDisplay">0</b></div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="cv-status" id="cvStatus">CV: LOADING</div>
+    <div class="scan-count">CAPTURED: <b id="countDisplay">0</b></div>
+  </div>
 </div>
 
 <div class="tabs">
@@ -280,14 +239,15 @@
   <div class="tab-content active" id="content-scanner">
 
     <div class="card">
-      <div class="card-label">◈ CAMERA INPUT — LIVE GUIDANCE</div>
+      <div class="card-label">◈ CAMERA INPUT — LIVE GUIDANCE + DETECTION PREVIEW</div>
       <div class="cam-wrap" id="camWrap">
         <video id="vid" autoplay playsinline muted></video>
         <img id="snap" alt="Captured frame">
+        <canvas id="detectionCanvas"></canvas>
         <div class="cam-placeholder" id="camPlaceholder">
           <div class="cam-icon">📷</div>
           <button class="start-btn" id="startBtn" onclick="startCamera()">▶&nbsp; START CAMERA</button>
-          <div class="cam-sub">Live guidance shows what's being detected<br>Aim at the equipment label and FAA tag</div>
+          <div class="cam-sub">Live guidance shows what's being detected<br>Bounding boxes appear over found values</div>
         </div>
 
         <div class="guide-overlay" id="guideOverlay" style="display:none;">
@@ -306,10 +266,28 @@
             </div>
           </div>
           <div class="corners" id="corners"><div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div></div>
-          <div id="detectionBoxes"></div>
           <div class="guide-hint" id="guideHint">Hold steady — analyzing frame</div>
         </div>
         <div class="scan-line" id="scanLine"></div>
+      </div>
+
+      <div class="detection-preview" id="detectionPreview">
+        <div class="preview-title">◈ DETECTED IN FRAME</div>
+        <div class="preview-row">
+          <div class="preview-label">Asset Tag</div>
+          <div class="preview-value missing" id="previewAsset">— not found</div>
+          <div class="preview-source" id="previewAssetSrc"></div>
+        </div>
+        <div class="preview-row">
+          <div class="preview-label">Model</div>
+          <div class="preview-value missing" id="previewModel">— not found</div>
+          <div class="preview-source" id="previewModelSrc"></div>
+        </div>
+        <div class="preview-row">
+          <div class="preview-label">Serial No</div>
+          <div class="preview-value missing" id="previewSerial">— not found</div>
+          <div class="preview-source" id="previewSerialSrc"></div>
+        </div>
       </div>
 
       <div class="plane-progress" id="planeProgress">
@@ -387,9 +365,10 @@
 
 </main>
 
-<canvas id="captureCanvas"></canvas>
-<canvas id="preprocessCanvas"></canvas>
-<canvas id="preprocessCanvas2"></canvas>
+<canvas id="captureCanvas" class="work"></canvas>
+<canvas id="preprocessCanvas" class="work"></canvas>
+<canvas id="preprocessCanvas2" class="work"></canvas>
+<canvas id="cvCanvas" class="work"></canvas>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -400,9 +379,18 @@ window.addEventListener('load', () => {
 let assets = [], stream = null, tesseractWorker = null;
 let savedFiles = [];
 let liveScanInterval = null;
-let lastDetections = { label: null, tag: null, serial: null };
 let zxingReader = null;
+let lastDetectionBoxes = []; // {x, y, w, h, label, color}
 const FILE_TTL_MS = 30 * 60 * 1000;
+
+// Update CV status badge once OpenCV finishes loading
+const cvCheckInterval = setInterval(() => {
+  if (window.cvReady && typeof cv !== 'undefined' && cv.Mat) {
+    document.getElementById('cvStatus').textContent = 'CV: READY';
+    document.getElementById('cvStatus').classList.add('ready');
+    clearInterval(cvCheckInterval);
+  }
+}, 300);
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -421,7 +409,6 @@ function showToast(msg, type) {
 
 function toggleDebug() { document.getElementById('debugText').classList.toggle('show'); }
 
-// ============ CAMERA + LIVE GUIDANCE ============
 async function startCamera() {
   const btn = document.getElementById('startBtn');
   btn.textContent = 'Starting...'; btn.disabled = true;
@@ -439,8 +426,6 @@ async function startCamera() {
     document.getElementById('scanLine').style.display = 'block';
     document.getElementById('captureBtn').disabled = false;
     document.getElementById('captureBtn').classList.add('live');
-
-    // Start live scanning loop
     startLiveScan();
   } catch(e) {
     btn.textContent = '▶  START CAMERA'; btn.disabled = false;
@@ -450,64 +435,35 @@ async function startCamera() {
   }
 }
 
-// Live scanning: tries to detect labels, asset tags, and serials in real-time
-// Uses ZXing for fast barcode detection; if a barcode is found we read it directly
 function startLiveScan() {
   stopLiveScan();
-  // Initialize ZXing if available
   try {
     if (typeof ZXingBrowser !== 'undefined' && !zxingReader) {
       zxingReader = new ZXingBrowser.BrowserMultiFormatReader();
     }
   } catch(e) { /* ignore */ }
-
   liveScanInterval = setInterval(async () => {
     const vid = document.getElementById('vid');
     if (!vid.videoWidth) return;
-
     try {
-      // Try barcode detection first (very fast, very reliable when present)
-      if (zxingReader) {
-        try {
-          const result = await zxingReader.decodeOnceFromVideoElement(vid).catch(() => null);
-          if (result && result.text) {
-            const decoded = result.text.trim();
-            updateLiveStatus('barcode', decoded);
-          }
-        } catch(e) { /* no barcode in view */ }
-      }
-
-      // Quick OCR-less heuristic detection: capture a small frame and look for high-contrast regions
-      // This gives the user feedback that something is being seen even before full OCR runs
       const heuristics = detectLabelInFrame(vid);
       updateGuidance(heuristics);
-    } catch(e) {
-      console.error('Live scan error', e);
-    }
+    } catch(e) { console.error('Live scan error', e); }
   }, 600);
 }
+function stopLiveScan() { if (liveScanInterval) { clearInterval(liveScanInterval); liveScanInterval = null; } }
 
-function stopLiveScan() {
-  if (liveScanInterval) { clearInterval(liveScanInterval); liveScanInterval = null; }
-}
-
-// Quick heuristic check: is there a high-contrast rectangular region (likely a label)?
-// Doesn't run full OCR — just looks at brightness distribution
 function detectLabelInFrame(video) {
   const canvas = document.getElementById('captureCanvas');
-  const SCALE = 0.25; // small for speed
+  const SCALE = 0.25;
   canvas.width = video.videoWidth * SCALE;
   canvas.height = video.videoHeight * SCALE;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-
-  // Compute brightness histogram + edge density
   let totalBrightness = 0;
   let highContrastPixels = 0;
   const w = canvas.width, h = canvas.height;
-  let lastRowBrightness = 0;
-
   for (let y = 0; y < h; y += 2) {
     for (let x = 0; x < w; x += 2) {
       const i = (y * w + x) * 4;
@@ -520,15 +476,12 @@ function detectLabelInFrame(video) {
       }
     }
   }
-
   const samples = (w / 2) * (h / 2);
   const avgBrightness = totalBrightness / samples;
   const contrastRatio = highContrastPixels / samples;
-
   return {
-    avgBrightness,
-    contrastRatio,
-    hasLabel: contrastRatio > 0.06, // text/edges present
+    avgBrightness, contrastRatio,
+    hasLabel: contrastRatio > 0.06,
     tooDark: avgBrightness < 50,
     tooBright: avgBrightness > 220,
     blurry: contrastRatio < 0.025
@@ -539,54 +492,38 @@ function updateGuidance(h) {
   const banner = document.getElementById('statusBanner');
   const corners = document.getElementById('corners');
   const hint = document.getElementById('guideHint');
-
-  // Clear classes
   banner.className = 'status-banner';
   corners.className = 'corners';
   hint.className = 'guide-hint';
-
   if (h.tooDark) {
     setStatus('label', 'searching', 'Too dark — turn on more light');
-    setStatus('tag', '', 'Waiting...');
-    setStatus('serial', '', 'Waiting...');
-    corners.classList.add('warning');
-    hint.classList.add('warning');
-    hint.textContent = '☀ More light needed';
-    return;
+    setStatus('tag', '', 'Waiting...'); setStatus('serial', '', 'Waiting...');
+    corners.classList.add('warning'); hint.classList.add('warning');
+    hint.textContent = '☀ More light needed'; return;
   }
   if (h.tooBright) {
     setStatus('label', 'searching', 'Too bright — reduce glare');
-    setStatus('tag', '', 'Waiting...');
-    setStatus('serial', '', 'Waiting...');
-    corners.classList.add('warning');
-    hint.classList.add('warning');
-    hint.textContent = '⚠ Reduce glare on label';
-    return;
+    setStatus('tag', '', 'Waiting...'); setStatus('serial', '', 'Waiting...');
+    corners.classList.add('warning'); hint.classList.add('warning');
+    hint.textContent = '⚠ Reduce glare on label'; return;
   }
   if (h.blurry) {
     setStatus('label', 'searching', 'Image too blurry — hold still');
-    setStatus('tag', '', 'Waiting...');
-    setStatus('serial', '', 'Waiting...');
-    corners.classList.add('warning');
-    hint.classList.add('warning');
-    hint.textContent = '⚠ Hold camera steady';
-    return;
+    setStatus('tag', '', 'Waiting...'); setStatus('serial', '', 'Waiting...');
+    corners.classList.add('warning'); hint.classList.add('warning');
+    hint.textContent = '⚠ Hold camera steady'; return;
   }
   if (h.hasLabel) {
     setStatus('label', 'searching', 'Label detected — hold steady to capture');
-    corners.classList.add('detected');
-    hint.classList.add('success');
-    hint.textContent = '✓ Label in frame — tap Capture';
-    return;
+    corners.classList.add('detected'); hint.classList.add('success');
+    hint.textContent = '✓ Label in frame — tap Capture'; return;
   }
-
   setStatus('label', 'searching', 'Aim at the label');
-  setStatus('tag', '', 'Waiting...');
-  setStatus('serial', '', 'Waiting...');
+  setStatus('tag', '', 'Waiting...'); setStatus('serial', '', 'Waiting...');
   hint.textContent = 'Position label inside the frame';
 }
 
-function setStatus(field, state, text) {
+function setStatus(field, state, text, value) {
   const fieldMap = {
     label: { icon: 'statusIconLabel', text: 'statusTextLabel' },
     tag: { icon: 'statusIconTag', text: 'statusTextTag' },
@@ -596,12 +533,7 @@ function setStatus(field, state, text) {
   const icon = document.getElementById(ids.icon);
   const txt = document.getElementById(ids.text);
   icon.className = 'status-icon' + (state ? ' ' + state : '');
-  txt.textContent = text;
-}
-
-function updateLiveStatus(kind, value) {
-  // For barcode hits during live scan — we just stash them; full extraction happens on capture
-  lastDetections[kind === 'barcode' ? 'barcode' : kind] = value;
+  txt.innerHTML = text + (value ? ' <span class="status-value">' + value + '</span>' : '');
 }
 
 function doCapture() {
@@ -650,6 +582,8 @@ function recapture() {
   document.getElementById('snap').classList.remove('on');
   document.getElementById('scanLine').style.display = 'block';
   document.getElementById('guideOverlay').style.display = 'block';
+  document.getElementById('detectionPreview').classList.remove('active');
+  clearDetectionCanvas();
   const cb = document.getElementById('captureBtn');
   cb.textContent = '⊙ Capture & Extract'; cb.onclick = doCapture;
   cb.classList.add('live');
@@ -668,7 +602,72 @@ function showProgress(show) {
   if (show) setProgress(0, 'PROCESSING...');
 }
 
-// ============ ADVANCED PREPROCESSING (3 variants) ============
+// ============ OPENCV-POWERED IMAGE PREPROCESSING ============
+// Uses OpenCV.js for advanced operations: Gaussian blur denoising, adaptive thresholding,
+// morphological operations to clean up text, and CLAHE for contrast enhancement.
+// Falls back to pure JS preprocessing if OpenCV isn't loaded yet.
+
+function preprocessWithOpenCV(dataUrl) {
+  return new Promise(resolve => {
+    if (!window.cvReady || typeof cv === 'undefined' || !cv.Mat) {
+      resolve(null); return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.getElementById('cvCanvas');
+        // Upscale aggressively
+        const scale = img.width < 1500 ? 2 : 1.4;
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        const ctx = c.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+
+        // Read into OpenCV
+        const src = cv.imread(c);
+        const gray = new cv.Mat();
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+        // CLAHE — contrast-limited adaptive histogram equalization
+        // Massively improves OCR on uneven lighting / glare
+        const clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
+        const claheOut = new cv.Mat();
+        clahe.apply(gray, claheOut);
+
+        // Mild Gaussian blur to denoise without losing edges
+        const blurred = new cv.Mat();
+        cv.GaussianBlur(claheOut, blurred, new cv.Size(3, 3), 0);
+
+        // Adaptive threshold — handles varied lighting much better than fixed threshold
+        const thresh = new cv.Mat();
+        cv.adaptiveThreshold(blurred, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 25, 12);
+
+        // Morphological operations: close gaps in characters
+        const kernel = cv.Mat.ones(2, 2, cv.CV_8U);
+        const closed = new cv.Mat();
+        cv.morphologyEx(thresh, closed, cv.MORPH_CLOSE, kernel);
+
+        // Output back to canvas
+        cv.imshow(c, closed);
+        const result = c.toDataURL('image/png');
+
+        // Cleanup
+        src.delete(); gray.delete(); clahe.delete(); claheOut.delete();
+        blurred.delete(); thresh.delete(); kernel.delete(); closed.delete();
+
+        resolve(result);
+      } catch(err) {
+        console.error('OpenCV preprocessing error:', err);
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
 function preprocessVariant(dataUrl, variant) {
   return new Promise(resolve => {
     const img = new Image();
@@ -678,8 +677,7 @@ function preprocessVariant(dataUrl, variant) {
       c.width = Math.round(img.width * scale);
       c.height = Math.round(img.height * scale);
       const ctx = c.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, c.width, c.height);
       const imgData = ctx.getImageData(0, 0, c.width, c.height);
       const d = imgData.data;
@@ -692,16 +690,11 @@ function preprocessVariant(dataUrl, variant) {
         }
       } else if (variant === 'B') {
         let total = 0, samples = 0;
-        for (let i = 0; i < d.length; i += 16) {
-          total += 0.3 * d[i] + 0.59 * d[i+1] + 0.11 * d[i+2];
-          samples++;
-        }
-        const mean = total / samples;
-        const threshold = mean * 0.85;
+        for (let i = 0; i < d.length; i += 16) { total += 0.3 * d[i] + 0.59 * d[i+1] + 0.11 * d[i+2]; samples++; }
+        const threshold = (total / samples) * 0.85;
         for (let i = 0; i < d.length; i += 4) {
           const gray = 0.3 * d[i] + 0.59 * d[i+1] + 0.11 * d[i+2];
-          const v = gray < threshold ? 0 : 255;
-          d[i] = d[i+1] = d[i+2] = v;
+          d[i] = d[i+1] = d[i+2] = gray < threshold ? 0 : 255;
         }
       } else {
         for (let i = 0; i < d.length; i += 4) {
@@ -725,10 +718,8 @@ async function getWorker() {
   setProgress(5, 'LOADING OCR ENGINE...');
   tesseractWorker = await Tesseract.createWorker('eng', 1, {
     logger: m => {
-      if (m.status === 'recognizing text') {
-        const overall = 30 + m.progress * 60;
-        setProgress(overall, 'READING TEXT...');
-      } else if (m.status === 'loading tesseract core') setProgress(10, 'LOADING ENGINE...');
+      if (m.status === 'recognizing text') setProgress(30 + m.progress * 60, 'READING TEXT...');
+      else if (m.status === 'loading tesseract core') setProgress(10, 'LOADING ENGINE...');
       else if (m.status === 'initializing tesseract') setProgress(15, 'INITIALIZING...');
       else if (m.status === 'loading language traineddata') setProgress(20, 'LOADING LANGUAGE...');
     }
@@ -745,11 +736,12 @@ async function ocrWithMode(worker, imgUrl, psmMode) {
   return {
     text: result.data.text || '',
     words: (result.data.words || []).filter(w => w.text && w.text.trim()),
-    confidence: result.data.confidence || 0
+    confidence: result.data.confidence || 0,
+    imgWidth: result.data.imgWidth || 0,
+    imgHeight: result.data.imgHeight || 0
   };
 }
 
-// ============ TRY BARCODE EXTRACTION FROM CAPTURED IMAGE ============
 async function tryBarcodeFromImage(dataUrl) {
   if (!zxingReader) {
     try { zxingReader = new ZXingBrowser.BrowserMultiFormatReader(); }
@@ -759,12 +751,11 @@ async function tryBarcodeFromImage(dataUrl) {
     const img = new Image();
     img.onload = async () => {
       try {
-        // ZXing browser supports decoding from an image element
         const results = [];
         try {
           const r = await zxingReader.decodeFromImageElement(img);
-          if (r && r.text) results.push(r.text.trim());
-        } catch(e) { /* no barcode */ }
+          if (r && r.text) results.push({ text: r.text.trim(), bbox: r.resultPoints || null });
+        } catch(e) {}
         resolve(results);
       } catch(e) { resolve([]); }
     };
@@ -773,53 +764,164 @@ async function tryBarcodeFromImage(dataUrl) {
   });
 }
 
+// ============ DRAW DETECTION BOXES ON CAPTURED IMAGE ============
+function clearDetectionCanvas() {
+  const dc = document.getElementById('detectionCanvas');
+  const ctx = dc.getContext('2d');
+  ctx.clearRect(0, 0, dc.width, dc.height);
+  lastDetectionBoxes = [];
+}
+
+function drawDetectionBoxes(boxes, sourceCanvas) {
+  const dc = document.getElementById('detectionCanvas');
+  const snap = document.getElementById('snap');
+  // Match canvas to displayed snapshot dimensions
+  const rect = snap.getBoundingClientRect();
+  dc.width = rect.width; dc.height = rect.height;
+  dc.style.width = rect.width + 'px'; dc.style.height = rect.height + 'px';
+  const ctx = dc.getContext('2d');
+  ctx.clearRect(0, 0, dc.width, dc.height);
+  if (!boxes.length) return;
+
+  const sx = rect.width / sourceCanvas.width;
+  const sy = rect.height / sourceCanvas.height;
+
+  for (const box of boxes) {
+    const x = box.x * sx, y = box.y * sy;
+    const w = box.w * sx, h = box.h * sy;
+    ctx.strokeStyle = box.color || '#39d353';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = box.color || '#39d353';
+    ctx.shadowBlur = 10;
+    ctx.strokeRect(x, y, w, h);
+    ctx.shadowBlur = 0;
+
+    // Label background
+    const labelText = box.label;
+    ctx.font = 'bold 12px "Barlow Condensed", sans-serif';
+    const metrics = ctx.measureText(labelText);
+    const padX = 6, padY = 4;
+    ctx.fillStyle = box.color || '#39d353';
+    ctx.fillRect(x, y - 18 - padY, metrics.width + padX * 2, 18 + padY);
+    ctx.fillStyle = '#0d1117';
+    ctx.fillText(labelText, x + padX, y - padY - 5);
+  }
+  lastDetectionBoxes = boxes;
+}
+
+function updatePreviewPanel(extracted, sources) {
+  const preview = document.getElementById('detectionPreview');
+  preview.classList.add('active');
+
+  const elAsset = document.getElementById('previewAsset');
+  const elModel = document.getElementById('previewModel');
+  const elSerial = document.getElementById('previewSerial');
+  const srcAsset = document.getElementById('previewAssetSrc');
+  const srcModel = document.getElementById('previewModelSrc');
+  const srcSerial = document.getElementById('previewSerialSrc');
+
+  if (extracted.assetTag) {
+    elAsset.textContent = extracted.assetTag;
+    elAsset.classList.remove('missing');
+    srcAsset.textContent = sources.assetTag || '';
+  } else {
+    elAsset.textContent = '— not found';
+    elAsset.classList.add('missing');
+    srcAsset.textContent = '';
+  }
+
+  if (extracted.modelValue) {
+    elModel.textContent = extracted.modelValue;
+    elModel.classList.remove('missing');
+    srcModel.textContent = sources.model || '';
+  } else {
+    elModel.textContent = '— not found';
+    elModel.classList.add('missing');
+    srcModel.textContent = '';
+  }
+
+  if (extracted.serial) {
+    elSerial.textContent = extracted.serial;
+    elSerial.classList.remove('missing');
+    srcSerial.textContent = sources.serial || '';
+  } else {
+    elSerial.textContent = '— not found';
+    elSerial.classList.add('missing');
+    srcSerial.textContent = '';
+  }
+}
+
 async function processImage(dataUrl) {
   document.getElementById('addBtn').disabled = true;
   showProgress(true);
+  clearDetectionCanvas();
 
   try {
     setProgress(3, 'CHECKING FOR BARCODES...');
     const barcodes = await tryBarcodeFromImage(dataUrl);
 
-    setProgress(8, 'PREPROCESSING (A)...');
+    setProgress(8, 'OPENCV PREPROCESS...');
+    const cvUrl = await preprocessWithOpenCV(dataUrl);
+
+    setProgress(15, 'PREPROCESS A...');
     const variantA = await preprocessVariant(dataUrl, 'A');
-    setProgress(15, 'PREPROCESSING (B)...');
+    setProgress(20, 'PREPROCESS B...');
     const variantB = await preprocessVariant(dataUrl, 'B');
-    setProgress(22, 'PREPROCESSING (C)...');
+    setProgress(25, 'PREPROCESS C...');
     const variantC = await preprocessVariant(dataUrl, 'C');
 
     setProgress(28, 'PREPARING ENGINE...');
     const worker = await getWorker();
 
-    setProgress(35, 'OCR PASS 1/3...');
+    setProgress(32, 'OCR PASS 1/4...');
     const passA = await ocrWithMode(worker, variantA, 6);
-    setProgress(60, 'OCR PASS 2/3...');
+    setProgress(50, 'OCR PASS 2/4...');
     const passB = await ocrWithMode(worker, variantB, 11);
-    setProgress(85, 'OCR PASS 3/3...');
+    setProgress(68, 'OCR PASS 3/4...');
     const passC = await ocrWithMode(worker, variantC, 3);
+
+    let passD = null;
+    if (cvUrl) {
+      setProgress(82, 'OCR PASS 4/4 (OPENCV)...');
+      passD = await ocrWithMode(worker, cvUrl, 6);
+    }
 
     setProgress(95, 'PARSING RESULTS...');
 
     const passes = [passA, passB, passC];
-    const debugInfo = passes.map((p, i) => `=== PASS ${i+1} (conf: ${Math.round(p.confidence)}) ===\n${p.text}`).join('\n\n');
-    const barcodeInfo = barcodes.length ? `=== BARCODES DETECTED ===\n${barcodes.join('\n')}\n\n` : '=== NO BARCODES DETECTED ===\n\n';
+    if (passD) passes.push(passD);
 
-    const { assetTag, serial, modelValue, debug } = parseAllPasses(passes, barcodes);
-    document.getElementById('debugPre').textContent = debug + '\n\n' + barcodeInfo + debugInfo;
+    const debugInfo = passes.map((p, i) => `=== PASS ${i+1} (conf: ${Math.round(p.confidence)}) ===\n${p.text}`).join('\n\n');
+    const barcodeInfo = barcodes.length ? `=== BARCODES ===\n${barcodes.map(b => b.text).join('\n')}\n\n` : '=== NO BARCODES ===\n\n';
+
+    const parsed = parseAllPasses(passes, barcodes);
+    document.getElementById('debugPre').textContent = parsed.debug + '\n\n' + barcodeInfo + debugInfo;
+
+    // Update preview panel + draw bounding boxes on snap
+    updatePreviewPanel(parsed, parsed.sources || {});
+
+    // Draw boxes on the captured image overlay
+    const sourceCanvas = document.getElementById('captureCanvas');
+    const boxes = [];
+    if (parsed.assetTagBox) boxes.push({ ...parsed.assetTagBox, label: 'ASSET TAG: ' + parsed.assetTag, color: '#00d4ff' });
+    if (parsed.serialBox)   boxes.push({ ...parsed.serialBox, label: 'SERIAL: ' + parsed.serial, color: '#39d353' });
+    if (parsed.modelBox)    boxes.push({ ...parsed.modelBox, label: 'MODEL: ' + parsed.modelValue, color: '#ff6b35' });
+    // Draw after snap renders
+    setTimeout(() => drawDetectionBoxes(boxes, sourceCanvas), 100);
 
     let n = 0;
-    if (assetTag) { setGreen('fieldAssetTag', assetTag); n++; }
-    if (serial) { setGreen('fieldSerial', serial); n++; }
-    if (modelValue) {
+    if (parsed.assetTag) { setGreen('fieldAssetTag', parsed.assetTag); n++; }
+    if (parsed.serial) { setGreen('fieldSerial', parsed.serial); n++; }
+    if (parsed.modelValue) {
       const sel = document.getElementById('fieldModel');
-      sel.value = modelValue;
-      if (sel.value === modelValue) n++;
+      sel.value = parsed.modelValue;
+      if (sel.value === parsed.modelValue) n++;
     }
 
     setProgress(100, 'COMPLETE');
     document.getElementById('addBtn').disabled = false;
     if (n === 0) showToast('No data matched — see debug below', 'wrn');
-    else showToast('✓ ' + n + ' field' + (n > 1 ? 's' : '') + ' extracted — verify & select model');
+    else showToast('✓ ' + n + ' field' + (n > 1 ? 's' : '') + ' extracted — verify & add');
   } catch(err) {
     console.error(err);
     showToast('OCR failed: ' + (err.message || 'unknown'), 'err');
@@ -829,57 +931,57 @@ async function processImage(dataUrl) {
   }
 }
 
-// ============ MULTI-PASS PARSER WITH BARCODE FALLBACK ============
+// ============ MULTI-PASS PARSER WITH BBOX TRACKING ============
 function parseAllPasses(passes, barcodes) {
   const debug = [];
   const allText = passes.map(p => p.text).join('\n').toUpperCase();
   let modelValue = null;
   let labelType = 'UNKNOWN';
+  let modelBox = null;
 
-  // ---- Label type detection (flexible patterns) ----
-  if (/VERIDT|900W?2036|STEALTH/.test(allText)) {
-    modelValue = "'900W2036-QXYON";
-    labelType = 'VERIDT';
-  } else if (/LNL-?M4420|M4420/.test(allText)) {
-    modelValue = "'LNL-M4420";
-    labelType = 'LNL_M4420';
-  } else if (/LNL-?1100|PCA-?00961|MR16IN-?S3/.test(allText)) {
-    modelValue = "'LNL-1100";
-    labelType = 'LNL_1100_WHITE';
-  } else if (/LNL-?1320-?S3B|PCA-?00984|MR52-?S3B/.test(allText)) {
-    modelValue = "'LNL-1320-S3";
-    labelType = 'LNL_1320_WHITE';
-  } else {
-    const PARTS = [
-      ['UTR-?9216',     "'UTR-9216ABTRLNL"],
-      ['UTR-?9202',     "'UTR-9202ABTRLNL"],
-      ['LNL-?1320-?S3', "'LNL-1320-S3"],
-      ['LNL-?1320',     "'LNL-1320-S3"]
-    ];
+  if (/VERIDT|900W?2036|STEALTH/.test(allText)) { modelValue = "'900W2036-QXYON"; labelType = 'VERIDT'; }
+  else if (/LNL-?M4420|M4420/.test(allText)) { modelValue = "'LNL-M4420"; labelType = 'LNL_M4420'; }
+  else if (/LNL-?1100|PCA-?00961|MR16IN-?S3/.test(allText)) { modelValue = "'LNL-1100"; labelType = 'LNL_1100_WHITE'; }
+  else if (/LNL-?1320-?S3B|PCA-?00984|MR52-?S3B/.test(allText)) { modelValue = "'LNL-1320-S3"; labelType = 'LNL_1320_WHITE'; }
+  else {
+    const PARTS = [['UTR-?9216',"'UTR-9216ABTRLNL"],['UTR-?9202',"'UTR-9202ABTRLNL"],['LNL-?1320-?S3',"'LNL-1320-S3"],['LNL-?1320',"'LNL-1320-S3"]];
     for (const [pattern, val] of PARTS) {
-      const re = new RegExp(pattern, 'i');
-      if (re.test(allText)) { modelValue = val; labelType = 'MCDEAN_BLUE'; break; }
+      if (new RegExp(pattern, 'i').test(allText)) { modelValue = val; labelType = 'MCDEAN_BLUE'; break; }
     }
   }
+
+  // Find bounding box for the model in any pass
+  if (modelValue) {
+    const stripped = modelValue.replace(/^'/, '').replace(/-/g, '').toUpperCase();
+    for (const p of passes) {
+      if (!p.words) continue;
+      for (const w of p.words) {
+        const wt = w.text.toUpperCase().replace(/-/g, '');
+        if (wt.includes(stripped.slice(0, 6)) || stripped.includes(wt) && wt.length > 4) {
+          modelBox = { x: w.bbox.x0, y: w.bbox.y0, w: w.bbox.x1 - w.bbox.x0, h: w.bbox.y1 - w.bbox.y0 };
+          break;
+        }
+      }
+      if (modelBox) break;
+    }
+  }
+
   debug.push('Label type: ' + labelType);
   debug.push('Model: ' + (modelValue || 'not detected'));
-  debug.push('Barcodes found: ' + (barcodes.length || 'none'));
+  debug.push('Barcodes: ' + (barcodes.length || 'none'));
 
-  // ---- Asset Tag (universal, all label types) ----
+  // ---- Asset Tag ----
   const assetCandidates = [];
+  let assetTagBox = null;
+  let assetSource = '';
 
-  // BARCODE BOOST: if any barcode is exactly 6 digits (FAA tag format), strong candidate
   for (const bc of barcodes) {
-    if (/^\d{6}$/.test(bc.trim())) {
-      assetCandidates.push({ value: bc.trim(), score: 200, source: 'barcode' });
-    }
+    const t = bc.text.trim();
+    if (/^\d{6}$/.test(t)) assetCandidates.push({ value: t, score: 200, source: 'barcode', bbox: null });
   }
 
   for (let pi = 0; pi < passes.length; pi++) {
     const p = passes[pi];
-    const lines = p.text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-
-    // Spatial near Property/FAA anchor
     if (p.words && p.words.length) {
       const anchorWords = p.words.filter(w => /^property$|^faa$|^of$/i.test(w.text.trim()));
       if (anchorWords.length) {
@@ -887,8 +989,7 @@ function parseAllPasses(passes, barcodes) {
         const maxY = Math.max(...anchorWords.map(w => w.bbox.y1));
         const minX = Math.min(...anchorWords.map(w => w.bbox.x0));
         const maxX = Math.max(...anchorWords.map(w => w.bbox.x1));
-        const h = maxY - minY;
-        const w = maxX - minX;
+        const h = maxY - minY, w = maxX - minX;
         const zone = { x0: minX - w * 1.0, x1: maxX + w * 1.5, y0: minY - h * 0.5, y1: maxY + h * 6 };
         for (const word of p.words) {
           const t = word.text.trim();
@@ -898,18 +999,25 @@ function parseAllPasses(passes, barcodes) {
           if (cx >= zone.x0 && cx <= zone.x1 && cy >= zone.y0 && cy <= zone.y1) {
             const distance = Math.abs(cy - maxY);
             const score = 100 + (word.confidence || 50) - distance * 0.05;
-            assetCandidates.push({ value: t, score, source: 'spatial-pass' + (pi+1) });
+            const bbox = { x: word.bbox.x0, y: word.bbox.y0, w: word.bbox.x1 - word.bbox.x0, h: word.bbox.y1 - word.bbox.y0 };
+            // Scale bbox from preprocessed image back to original
+            // (preprocessing scales up — we need to scale back proportionally)
+            const scaleX = p.imgWidth ? sourceCanvasWidth() / p.imgWidth : 1;
+            const scaleY = p.imgHeight ? sourceCanvasHeight() / p.imgHeight : 1;
+            const origBox = { x: bbox.x * scaleX, y: bbox.y * scaleY, w: bbox.w * scaleX, h: bbox.h * scaleY };
+            assetCandidates.push({ value: t, score, source: 'spatial-pass' + (pi+1), bbox: origBox });
           }
         }
       }
     }
 
+    const lines = p.text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     for (let i = 0; i < lines.length; i++) {
       if (/property/i.test(lines[i])) {
         for (let j = i; j <= Math.min(i + 3, lines.length - 1); j++) {
           if (/faamig|psems|migration|mmc-rd|po\s*no|csi|neca/i.test(lines[j])) continue;
           const m = lines[j].match(/(?:^|\s)(\d{6})(?:\s|$)/) || lines[j].match(/\b(\d{6})\b/);
-          if (m) assetCandidates.push({ value: m[1], score: 80, source: 'textrow-pass' + (pi+1) });
+          if (m) assetCandidates.push({ value: m[1], score: 80, source: 'textrow-pass' + (pi+1), bbox: null });
         }
       }
     }
@@ -923,44 +1031,41 @@ function parseAllPasses(passes, barcodes) {
       const matches = line.match(/(?:^|[^\d-])(\d{6})(?:[^\d-]|$)/g);
       if (matches) for (const m of matches) {
         const num = m.match(/\d{6}/)[0];
-        assetCandidates.push({ value: num, score: 40, source: 'fallback-pass' + (pi+1) });
+        assetCandidates.push({ value: num, score: 40, source: 'fallback-pass' + (pi+1), bbox: null });
       }
     }
   }
 
-  const assetTagPick = pickBestCandidate(assetCandidates);
+  const assetPick = pickBestCandidateWithBox(assetCandidates);
+  const assetTagPick = assetPick ? assetPick.value : null;
+  if (assetPick) {
+    assetTagBox = assetPick.bbox;
+    assetSource = assetPick.source;
+  }
   debug.push('Asset tag candidates: ' + JSON.stringify(assetCandidates.map(c => `${c.value}(${Math.round(c.score)})`).slice(0, 8)));
-  debug.push('Asset tag picked: ' + (assetTagPick || 'none'));
+  debug.push('Asset tag picked: ' + (assetTagPick || 'none') + ' from ' + assetSource);
 
-  // ---- Serial Number (label-type-specific branches) ----
+  // ---- Serial Number ----
   const serialCandidates = [];
+  let serialBox = null;
+  let serialSource = '';
 
-  // Add barcode-extracted candidates with strong scoring
   for (const bc of barcodes) {
-    const cleaned = bc.trim();
-    if (cleaned.length >= 6 && cleaned.length <= 20) {
-      // Skip ones that look like FAA asset tags (already handled)
-      if (/^\d{6}$/.test(cleaned)) continue;
-      serialCandidates.push({ value: cleaned, score: 150, source: 'barcode' });
+    const t = bc.text.trim();
+    if (t.length >= 6 && t.length <= 20 && !/^\d{6}$/.test(t)) {
+      serialCandidates.push({ value: t, score: 150, source: 'barcode', bbox: null });
     }
   }
 
   for (let pi = 0; pi < passes.length; pi++) {
     const p = passes[pi];
     const lines = p.text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-
-    if (labelType === 'LNL_1100_WHITE') {
-      extractDigitSerial(lines, p, pi, serialCandidates, '00961', '0961', 'lnl1100white');
-    } else if (labelType === 'LNL_1320_WHITE') {
-      extractDigitSerial(lines, p, pi, serialCandidates, '00984', '0984', 'lnl1320white');
-    } else if (labelType === 'LNL_M4420') {
-      extractM4420Serial(lines, p, pi, serialCandidates);
-    } else if (labelType === 'VERIDT') {
-      extractVeridtSerial(lines, p, pi, serialCandidates);
-    } else if (labelType === 'MCDEAN_BLUE') {
-      extractMCDeanBlueSerial(lines, p, pi, serialCandidates);
-    } else {
-      // UNKNOWN — try all extraction strategies generously
+    if (labelType === 'LNL_1100_WHITE') extractDigitSerial(lines, p, pi, serialCandidates, '00961', '0961', 'lnl1100white');
+    else if (labelType === 'LNL_1320_WHITE') extractDigitSerial(lines, p, pi, serialCandidates, '00984', '0984', 'lnl1320white');
+    else if (labelType === 'LNL_M4420') extractM4420Serial(lines, p, pi, serialCandidates);
+    else if (labelType === 'VERIDT') extractVeridtSerial(lines, p, pi, serialCandidates);
+    else if (labelType === 'MCDEAN_BLUE') extractMCDeanBlueSerial(lines, p, pi, serialCandidates);
+    else {
       extractDigitSerial(lines, p, pi, serialCandidates, null, null, 'unknown-d');
       extractM4420Serial(lines, p, pi, serialCandidates);
       extractVeridtSerial(lines, p, pi, serialCandidates);
@@ -968,30 +1073,30 @@ function parseAllPasses(passes, barcodes) {
     }
   }
 
-  const serialPick = pickBestCandidate(serialCandidates);
+  const serialPick = pickBestCandidateWithBox(serialCandidates);
+  const serialPickValue = serialPick ? serialPick.value : null;
+  if (serialPick) {
+    serialBox = serialPick.bbox;
+    serialSource = serialPick.source;
+  }
   debug.push('Serial candidates: ' + JSON.stringify(serialCandidates.map(c => `${c.value}(${Math.round(c.score)})`).slice(0, 10)));
-  debug.push('Serial picked: ' + (serialPick || 'none'));
+  debug.push('Serial picked: ' + (serialPickValue || 'none') + ' from ' + serialSource);
 
-  return { assetTag: assetTagPick, serial: serialPick, modelValue, debug: debug.join('\n') };
+  return {
+    assetTag: assetTagPick,
+    serial: serialPickValue,
+    modelValue,
+    assetTagBox, serialBox, modelBox,
+    sources: { assetTag: assetSource, serial: serialSource, model: labelType },
+    debug: debug.join('\n')
+  };
 }
 
-// ---- Per-label-type serial extractors ----
+function sourceCanvasWidth()  { return document.getElementById('captureCanvas').width; }
+function sourceCanvasHeight() { return document.getElementById('captureCanvas').height; }
+
 function extractDigitSerial(lines, p, pi, candidates, badNum1, badNum2, tag) {
-  for (let i = 0; i < lines.length; i++) {
-    if (/\bS\s*\/?\s*N\b/i.test(lines[i])) {
-      for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
-        const valueArea = lines[j].replace(/.*\bS\s*\/?\s*N\s*:?\s*/i, '');
-        const cs = valueArea.match(/\b(\d{6,9})\b/g) || [];
-        for (const c of cs) {
-          const idx = valueArea.indexOf(c);
-          const before = idx > 0 ? valueArea[idx - 1] : '';
-          if (/[A-Za-z\-]/.test(before)) continue;
-          const lengthBonus = c.length === 7 ? 30 : (c.length === 6 || c.length === 8 ? 15 : 0);
-          candidates.push({ value: c, score: 120 + lengthBonus, source: tag + '-row-pass' + (pi+1) });
-        }
-      }
-    }
-  }
+  // Look for tokens after S/N keyword, also try spatial method with bbox capture
   if (p.words && p.words.length) {
     const snWords = p.words.filter(w => /^S\/?N$|^S$/i.test(w.text.trim()));
     for (const sn of snWords) {
@@ -1004,7 +1109,25 @@ function extractDigitSerial(lines, p, pi, candidates, badNum1, badNum2, tag) {
       for (const w of sameRow) {
         const v = w.text.trim();
         const lengthBonus = v.length === 7 ? 30 : 0;
-        candidates.push({ value: v, score: 110 + lengthBonus, source: tag + '-spatial-pass' + (pi+1) });
+        const scaleX = p.imgWidth ? sourceCanvasWidth() / p.imgWidth : 1;
+        const scaleY = p.imgHeight ? sourceCanvasHeight() / p.imgHeight : 1;
+        const bbox = { x: w.bbox.x0 * scaleX, y: w.bbox.y0 * scaleY, w: (w.bbox.x1 - w.bbox.x0) * scaleX, h: (w.bbox.y1 - w.bbox.y0) * scaleY };
+        candidates.push({ value: v, score: 110 + lengthBonus, source: tag + '-spatial-pass' + (pi+1), bbox });
+      }
+    }
+  }
+  for (let i = 0; i < lines.length; i++) {
+    if (/\bS\s*\/?\s*N\b/i.test(lines[i])) {
+      for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
+        const valueArea = lines[j].replace(/.*\bS\s*\/?\s*N\s*:?\s*/i, '');
+        const cs = valueArea.match(/\b(\d{6,9})\b/g) || [];
+        for (const c of cs) {
+          const idx = valueArea.indexOf(c);
+          const before = idx > 0 ? valueArea[idx - 1] : '';
+          if (/[A-Za-z\-]/.test(before)) continue;
+          const lengthBonus = c.length === 7 ? 30 : (c.length === 6 || c.length === 8 ? 15 : 0);
+          candidates.push({ value: c, score: 120 + lengthBonus, source: tag + '-row-pass' + (pi+1), bbox: null });
+        }
       }
     }
   }
@@ -1015,7 +1138,7 @@ function extractDigitSerial(lines, p, pi, candidates, badNum1, badNum2, tag) {
     const ctxRegex = new RegExp('[A-Z\\-]\\s*' + t + '\\b|\\b' + t + '\\s*[A-Z\\-]', 'i');
     if (ctxRegex.test(p.text)) continue;
     const lengthBonus = t.length === 7 ? 20 : 0;
-    candidates.push({ value: t, score: 50 + lengthBonus, source: tag + '-fallback' + (pi+1) });
+    candidates.push({ value: t, score: 50 + lengthBonus, source: tag + '-fallback' + (pi+1), bbox: null });
   }
 }
 
@@ -1026,6 +1149,29 @@ function extractM4420Serial(lines, p, pi, candidates) {
     if (u.length < 8 || u.length > 12) return null;
     return SERIAL_PREFIX + u.slice(4);
   }
+  if (p.words && p.words.length) {
+    const snWords = p.words.filter(w => /^S\/?N$|^S$/i.test(w.text.trim()));
+    for (const sn of snWords) {
+      const snY = (sn.bbox.y0 + sn.bbox.y1) / 2;
+      const snHeight = sn.bbox.y1 - sn.bbox.y0;
+      const sameRow = p.words.filter(w => {
+        const wy = (w.bbox.y0 + w.bbox.y1) / 2;
+        return Math.abs(wy - snY) < snHeight * 1.5 && w.bbox.x0 > sn.bbox.x1;
+      });
+      for (const w of sameRow) {
+        const u = w.text.trim().toUpperCase();
+        if (!/[A-Z]/.test(u) || !/\d/.test(u)) continue;
+        if (u.length < 6 || u.length > 14) continue;
+        if (/^LNL/i.test(u)) continue;
+        const n = normalize(u); if (!n) continue;
+        const lengthBonus = n.length === 10 ? 30 : 0;
+        const scaleX = p.imgWidth ? sourceCanvasWidth() / p.imgWidth : 1;
+        const scaleY = p.imgHeight ? sourceCanvasHeight() / p.imgHeight : 1;
+        const bbox = { x: w.bbox.x0 * scaleX, y: w.bbox.y0 * scaleY, w: (w.bbox.x1 - w.bbox.x0) * scaleX, h: (w.bbox.y1 - w.bbox.y0) * scaleY };
+        candidates.push({ value: n, score: 130 + lengthBonus, source: 'lnlm4420-spatial-pass' + (pi+1), bbox });
+      }
+    }
+  }
   for (let i = 0; i < lines.length; i++) {
     if (/\bS\s*\/?\s*N\b/i.test(lines[i])) {
       for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
@@ -1035,10 +1181,9 @@ function extractM4420Serial(lines, p, pi, candidates) {
           const u = c.toUpperCase();
           if (!/[A-Z]/.test(u) || !/\d/.test(u)) continue;
           if (/^LNL/i.test(u)) continue;
-          const n = normalize(u);
-          if (!n) continue;
+          const n = normalize(u); if (!n) continue;
           const lengthBonus = n.length === 10 ? 30 : (n.length === 9 || n.length === 11 ? 15 : 0);
-          candidates.push({ value: n, score: 120 + lengthBonus, source: 'lnlm4420-row-pass' + (pi+1) });
+          candidates.push({ value: n, score: 120 + lengthBonus, source: 'lnlm4420-row-pass' + (pi+1), bbox: null });
         }
       }
     }
@@ -1054,16 +1199,40 @@ function extractM4420Serial(lines, p, pi, candidates) {
       const n = normalize(u);
       if (n) {
         const lengthBonus = n.length === 10 ? 30 : 0;
-        candidates.push({ value: n, score: 90 + lengthBonus, source: 'lnlm4420-prefix-pass' + (pi+1) });
+        candidates.push({ value: n, score: 90 + lengthBonus, source: 'lnlm4420-prefix-pass' + (pi+1), bbox: null });
       }
     } else if (u.length === 10) {
       const n = normalize(u);
-      if (n) candidates.push({ value: n, score: 50, source: 'lnlm4420-fallback' + (pi+1) });
+      if (n) candidates.push({ value: n, score: 50, source: 'lnlm4420-fallback' + (pi+1), bbox: null });
     }
   }
 }
 
 function extractVeridtSerial(lines, p, pi, candidates) {
+  if (p.words && p.words.length) {
+    const snWords = p.words.filter(w => /^serial/i.test(w.text.trim()));
+    for (const sn of snWords) {
+      const snY = (sn.bbox.y0 + sn.bbox.y1) / 2;
+      const snHeight = sn.bbox.y1 - sn.bbox.y0;
+      const sameRow = p.words.filter(w => {
+        const wy = (w.bbox.y0 + w.bbox.y1) / 2;
+        return Math.abs(wy - snY) < snHeight * 1.5 && w.bbox.x0 > sn.bbox.x1;
+      });
+      for (const w of sameRow) {
+        const u = w.text.trim().toUpperCase();
+        const m = u.match(/^([A-Z]{1,4}\d{6,12})$/);
+        if (m) {
+          let s = m[1].replace(/^[A-Z]+/, 'MC');
+          if (/^MC\d{6,12}$/.test(s)) {
+            const scaleX = p.imgWidth ? sourceCanvasWidth() / p.imgWidth : 1;
+            const scaleY = p.imgHeight ? sourceCanvasHeight() / p.imgHeight : 1;
+            const bbox = { x: w.bbox.x0 * scaleX, y: w.bbox.y0 * scaleY, w: (w.bbox.x1 - w.bbox.x0) * scaleX, h: (w.bbox.y1 - w.bbox.y0) * scaleY };
+            candidates.push({ value: s, score: 130, source: 'veridt-spatial-pass' + (pi+1), bbox });
+          }
+        }
+      }
+    }
+  }
   for (let i = 0; i < lines.length; i++) {
     if (/serial/i.test(lines[i])) {
       for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
@@ -1071,7 +1240,7 @@ function extractVeridtSerial(lines, p, pi, candidates) {
         const m = valueArea.match(/\b([A-Z]{1,4}\d{6,12})\b/i);
         if (m) {
           let s = m[1].toUpperCase().replace(/^[A-Z]+/, 'MC');
-          if (/^MC\d{6,12}$/.test(s)) candidates.push({ value: s, score: 100, source: 'veridt-pass' + (pi+1) });
+          if (/^MC\d{6,12}$/.test(s)) candidates.push({ value: s, score: 100, source: 'veridt-pass' + (pi+1), bbox: null });
         }
       }
     }
@@ -1079,11 +1248,30 @@ function extractVeridtSerial(lines, p, pi, candidates) {
   const matches = (p.text.match(/\b[A-Z]{1,4}\d{6,12}\b/g) || []);
   for (const m of matches) {
     let s = m.toUpperCase().replace(/^[A-Z]+/, 'MC');
-    if (/^MC\d{6,12}$/.test(s)) candidates.push({ value: s, score: 60, source: 'veridt-fallback' + (pi+1) });
+    if (/^MC\d{6,12}$/.test(s)) candidates.push({ value: s, score: 60, source: 'veridt-fallback' + (pi+1), bbox: null });
   }
 }
 
 function extractMCDeanBlueSerial(lines, p, pi, candidates) {
+  if (p.words && p.words.length) {
+    const snWords = p.words.filter(w => /^serial/i.test(w.text.trim()));
+    for (const sn of snWords) {
+      const snY = (sn.bbox.y0 + sn.bbox.y1) / 2;
+      const snHeight = sn.bbox.y1 - sn.bbox.y0;
+      const sameRow = p.words.filter(w => {
+        const wy = (w.bbox.y0 + w.bbox.y1) / 2;
+        return Math.abs(wy - snY) < snHeight * 1.5 && w.bbox.x0 > sn.bbox.x1 && /^\d{10,16}$/.test(w.text.trim());
+      });
+      for (const w of sameRow) {
+        const v = w.text.trim();
+        const score = 130 + Math.min(v.length, 14) * 2;
+        const scaleX = p.imgWidth ? sourceCanvasWidth() / p.imgWidth : 1;
+        const scaleY = p.imgHeight ? sourceCanvasHeight() / p.imgHeight : 1;
+        const bbox = { x: w.bbox.x0 * scaleX, y: w.bbox.y0 * scaleY, w: (w.bbox.x1 - w.bbox.x0) * scaleX, h: (w.bbox.y1 - w.bbox.y0) * scaleY };
+        candidates.push({ value: v, score, source: 'mcdean-spatial-pass' + (pi+1), bbox });
+      }
+    }
+  }
   for (let i = 0; i < lines.length; i++) {
     if (/serial/i.test(lines[i])) {
       for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
@@ -1091,7 +1279,7 @@ function extractMCDeanBlueSerial(lines, p, pi, candidates) {
         const matches = valueArea.match(/\b(\d{10,16})\b/g);
         if (matches) for (const m of matches) {
           const score = 100 + Math.min(m.length, 14) * 2;
-          candidates.push({ value: m, score, source: 'mcdean-row-pass' + (pi+1) });
+          candidates.push({ value: m, score, source: 'mcdean-row-pass' + (pi+1), bbox: null });
         }
       }
     }
@@ -1099,20 +1287,23 @@ function extractMCDeanBlueSerial(lines, p, pi, candidates) {
   const all = (p.text.match(/\b\d{12,16}\b/g) || []);
   for (const m of all) {
     const score = m.length === 14 ? 70 : (m.length >= 13 ? 50 : 30);
-    candidates.push({ value: m, score, source: 'mcdean-fallback' + (pi+1) });
+    candidates.push({ value: m, score, source: 'mcdean-fallback' + (pi+1), bbox: null });
   }
 }
 
-function pickBestCandidate(candidates) {
+function pickBestCandidateWithBox(candidates) {
   if (!candidates.length) return null;
   const tallies = {};
   for (const c of candidates) {
-    if (!tallies[c.value]) tallies[c.value] = { value: c.value, totalScore: 0, count: 0 };
+    if (!tallies[c.value]) tallies[c.value] = { value: c.value, totalScore: 0, count: 0, sources: [], firstBox: null };
     tallies[c.value].totalScore += c.score;
     tallies[c.value].count++;
+    tallies[c.value].sources.push(c.source);
+    if (!tallies[c.value].firstBox && c.bbox) tallies[c.value].firstBox = c.bbox;
   }
   const sorted = Object.values(tallies).sort((a, b) => (b.totalScore + b.count * 15) - (a.totalScore + a.count * 15));
-  return sorted[0].value;
+  const top = sorted[0];
+  return { value: top.value, source: top.sources[0] || 'unknown', bbox: top.firstBox };
 }
 
 function setGreen(id, val) {
@@ -1125,6 +1316,7 @@ function clearFields() {
   document.getElementById('fieldModel').value = '';
   document.getElementById('addBtn').disabled = true;
   document.getElementById('debugPre').textContent = 'No scan yet';
+  document.getElementById('detectionPreview').classList.remove('active');
   recapture();
 }
 
