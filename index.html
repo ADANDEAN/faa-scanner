@@ -383,6 +383,7 @@
             <option value="">— Select model —</option>
             <option value="'UTR-9202ABTRLNL">'UTR-9202ABTRLNL</option>
             <option value="'LNL-1320-S3">'LNL-1320-S3</option>
+            <option value="'900W2036-QXYON">'900W2036-QXYON</option>
           </select>
         </div>
         <div class="field-row">
@@ -611,11 +612,17 @@ async function processImage(dataUrl) {
 
     document.getElementById('debugPre').textContent = rawText || '(no text detected)';
 
-    const { assetTag, serial } = parseLabel(rawText);
+    const { assetTag, serial, modelValue } = parseLabel(rawText);
 
     let n = 0;
     if (assetTag) { setGreen('fieldAssetTag', assetTag); n++; }
     if (serial) { setGreen('fieldSerial', serial); n++; }
+    if (modelValue) {
+      const sel = document.getElementById('fieldModel');
+      sel.value = modelValue;
+      // If the value matches an option, count it
+      if (sel.value === modelValue) n++;
+    }
 
     setProgress(100, 'COMPLETE');
 
@@ -632,10 +639,50 @@ async function processImage(dataUrl) {
 }
 
 // ============ PARSE LABEL ============
+// Known part numbers — used for auto-detect and dropdown matching
+const KNOWN_PARTS = [
+  { keyword: 'UTR-9202ABTRLNL', value: "'UTR-9202ABTRLNL" },
+  { keyword: 'LNL-1320-S3', value: "'LNL-1320-S3" },
+  { keyword: '900W2036-QXYON', value: "'900W2036-QXYON" }
+];
+
 function parseLabel(text) {
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  let assetTag = null, serial = null;
+  let assetTag = null, serial = null, partNumber = null;
 
+  // -------- PART NUMBER DETECTION --------
+  // Strategy 1: find row labeled "Part No" and grab the value
+  // Strategy 2: scan whole text for any KNOWN_PARTS keyword (handles OCR noise)
+  for (let i = 0; i < lines.length; i++) {
+    if (/part\s*no/i.test(lines[i])) {
+      // Check this line + next line for an alphanumeric model code (with dashes)
+      for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
+        // Match codes like UTR-9202ABTRLNL, LNL-1320-S3, 900W2036-QXYON
+        const m = lines[j].match(/\b([A-Z0-9]{2,}[-][A-Z0-9-]{2,})\b/i);
+        if (m) { partNumber = m[1].toUpperCase(); break; }
+      }
+      if (partNumber) break;
+    }
+  }
+  // Fallback: search whole text for known part keywords (allows OCR noise around them)
+  if (!partNumber) {
+    const upper = text.toUpperCase();
+    for (const p of KNOWN_PARTS) {
+      if (upper.includes(p.keyword)) { partNumber = p.keyword; break; }
+    }
+  }
+  // Match the detected part number to a dropdown value (fuzzy matching)
+  let modelValue = null;
+  if (partNumber) {
+    for (const p of KNOWN_PARTS) {
+      // exact or contains
+      if (partNumber === p.keyword || partNumber.includes(p.keyword) || p.keyword.includes(partNumber)) {
+        modelValue = p.value; break;
+      }
+    }
+  }
+
+  // -------- ASSET TAG --------
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (/property\s*of\s*faa/i.test(line) || /property/i.test(line)) {
@@ -661,12 +708,23 @@ function parseLabel(text) {
     }
   }
 
+  // -------- SERIAL NUMBER --------
+  // Now supports both pure digits (e.g. 82162523700767) AND alphanumeric (e.g. MC08250256)
   for (let i = 0; i < lines.length; i++) {
     if (/serial/i.test(lines[i])) {
+      // Check this line + next line for alphanumeric or digit sequence
       for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
-        const matches = lines[j].match(/\b(\d{8,16})\b/g);
-        if (matches) {
-          serial = matches.sort((a, b) => b.length - a.length)[0];
+        // Strip the "Serial No" label part to look at the value side
+        const valueArea = lines[j].replace(/.*serial\s*(no)?\.?:?\s*/i, '');
+
+        // Try alphanumeric serial first (letters + digits, 6+ chars, like MC08250256)
+        const alphaMatch = valueArea.match(/\b([A-Z]{1,4}\d{6,})\b/i);
+        if (alphaMatch) { serial = alphaMatch[1].toUpperCase(); break; }
+
+        // Otherwise look for a long digit sequence (8-16 digits)
+        const digitMatches = valueArea.match(/\b(\d{8,16})\b/g);
+        if (digitMatches) {
+          serial = digitMatches.sort((a, b) => b.length - a.length)[0];
           break;
         }
       }
@@ -674,12 +732,19 @@ function parseLabel(text) {
     }
   }
 
+  // Fallback: longest alphanumeric or digit sequence in the whole text
   if (!serial) {
-    const allNumbers = (text.match(/\b\d{10,15}\b/g) || []);
-    if (allNumbers.length) serial = allNumbers.sort((a, b) => b.length - a.length)[0];
+    // Look for alphanumeric serials (2-4 letters + 6+ digits)
+    const alphaAll = (text.match(/\b[A-Z]{1,4}\d{6,}\b/g) || []);
+    if (alphaAll.length) {
+      serial = alphaAll.sort((a, b) => b.length - a.length)[0].toUpperCase();
+    } else {
+      const allNumbers = (text.match(/\b\d{10,15}\b/g) || []);
+      if (allNumbers.length) serial = allNumbers.sort((a, b) => b.length - a.length)[0];
+    }
   }
 
-  return { assetTag, serial };
+  return { assetTag, serial, modelValue };
 }
 
 function setGreen(id, val) {
