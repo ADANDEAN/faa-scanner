@@ -680,25 +680,52 @@ function parseLabel(text) {
   let assetTag = null, serial = null, modelValue = null;
 
   // -------- ASSET TAG (universal — same sticker on all assets) --------
-  // Always 6 digits under "Property of FAA" sticker
+  // The asset tag is a 6-digit number on a small WHITE sticker that has
+  // "Property of FAA" written above it (e.g. 117520, 117521, 117522).
+  // It is NEVER on the blue M.C. Dean label.
+  //
+  // Strategy: find a line containing "Property" — not just "FAA" — to avoid
+  // matching the "FAAMIG" or "FAA PSEMS MIGRATION" header text on the blue label.
   for (let i = 0; i < lines.length; i++) {
-    if (/property\s*of\s*faa/i.test(lines[i]) || /property/i.test(lines[i])) {
+    if (/property/i.test(lines[i])) {
+      // Look on this line + next 2 lines for a clean 6-digit number
       for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
-        const m = lines[j].match(/\b(\d{6})\b/);
-        if (m) { assetTag = m[1]; break; }
+        // Match a standalone 6-digit number (not part of a longer string)
+        const m = lines[j].match(/(?:^|\s)(\d{6})(?:\s|$)/) || lines[j].match(/\b(\d{6})\b/);
+        if (m) {
+          // Sanity check: reject obvious non-tag numbers
+          // (must not be inside something like "FAAMIG-003" or have surrounding text suggesting it's part of a code)
+          const num = m[1];
+          // Reject if line contains FAAMIG, PSEMS, MIGRATION, MMC-RD, or similar header text
+          if (/faamig|psems|migration|mmc-rd|po\s*no|csi|neca/i.test(lines[j])) continue;
+          assetTag = num;
+          break;
+        }
       }
       if (assetTag) break;
     }
   }
+
+  // Fallback: only used if "Property" wasn't found at all on the page.
+  // Look for a STANDALONE 6-digit number on its own line, ignoring lines
+  // that contain header/code text we know never have asset tags.
   if (!assetTag) {
     for (const line of lines) {
-      if (/\bp[o0]\b/i.test(line)) continue;
-      const m = line.match(/^\s*(\d{6})\s*$/) || line.match(/\b(\d{6})\b/);
+      // Skip lines that contain known non-asset-tag text
+      if (/faamig|psems|migration|mmc-rd|p[o0]\s*no|po\b|csi\s*\d+|neca|item|manufacturer|part\s*no|receiving|printed|quantity|section/i.test(line)) continue;
+      // Skip date-looking lines
+      if (/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(line)) continue;
+
+      // Match a standalone 6-digit number that is not adjacent to other digits
+      const m = line.match(/^\s*(\d{6})\s*$/) ||
+                line.match(/(?:^|[^\d-])(\d{6})(?:[^\d-]|$)/);
       if (m) {
         const num = m[1];
         const allNums = line.match(/\d+/g) || [];
-        if (allNums.length === 1 || (allNums.length > 1 && allNums[0] === num && allNums.length < 3)) {
-          assetTag = num; break;
+        // Only take it if this is the only/dominant number on the line
+        if (allNums.length === 1 || (allNums.length <= 2 && allNums.includes(num))) {
+          assetTag = num;
+          break;
         }
       }
     }
