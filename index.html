@@ -25,99 +25,25 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; display: flex; flex-direction: column; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
 
-  /* ============ INTRO PLANE ANIMATION ============ */
-  .intro {
-    position: fixed; inset: 0;
-    background: var(--bg);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    transition: opacity 0.4s ease, visibility 0.4s ease;
-  }
+  /* INTRO PLANE */
+  .intro { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: opacity 0.4s, visibility 0.4s; }
   .intro.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-
-  .sky-stars {
-    position: absolute; inset: 0;
-    background-image:
-      radial-gradient(1px 1px at 20% 30%, var(--accent), transparent),
-      radial-gradient(1px 1px at 60% 70%, rgba(0,212,255,0.5), transparent),
-      radial-gradient(1px 1px at 80% 20%, var(--accent), transparent),
-      radial-gradient(1px 1px at 35% 80%, rgba(255,107,53,0.4), transparent),
-      radial-gradient(1px 1px at 90% 60%, var(--accent), transparent);
-    background-size: 100% 100%;
-    opacity: 0.6;
-  }
-
-  .clouds {
-    position: absolute; left: -200px; bottom: 35%;
-    width: calc(100% + 400px);
-    height: 40px;
-    opacity: 0.15;
-  }
+  .sky-stars { position: absolute; inset: 0; background-image: radial-gradient(1px 1px at 20% 30%, var(--accent), transparent), radial-gradient(1px 1px at 60% 70%, rgba(0,212,255,0.5), transparent), radial-gradient(1px 1px at 80% 20%, var(--accent), transparent), radial-gradient(1px 1px at 35% 80%, rgba(255,107,53,0.4), transparent), radial-gradient(1px 1px at 90% 60%, var(--accent), transparent); background-size: 100% 100%; opacity: 0.6; }
+  .clouds { position: absolute; left: -200px; bottom: 35%; width: calc(100% + 400px); height: 40px; opacity: 0.15; }
   .cloud { position: absolute; width: 80px; height: 22px; background: var(--text); border-radius: 20px; }
   .cloud:nth-child(1) { top: 0; left: 10%; animation: cloudDrift 18s linear infinite; }
   .cloud:nth-child(2) { top: 30px; left: 35%; animation: cloudDrift 22s linear infinite; }
   .cloud:nth-child(3) { top: -10px; left: 65%; animation: cloudDrift 16s linear infinite; }
-  @keyframes cloudDrift {
-    0% { transform: translateX(0); } 100% { transform: translateX(-300px); }
-  }
-
-  .runway {
-    position: absolute; bottom: 25%; left: 0; right: 0;
-    height: 2px; background: linear-gradient(90deg, transparent, var(--accent2), transparent);
-    opacity: 0.5;
-  }
-
-  .plane-fly {
-    position: relative;
-    width: 140px; height: 140px;
-    color: var(--accent);
-    animation: planeFlight 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-  @keyframes planeFlight {
-    0% { transform: translate(-100vw, 30vh) rotate(-5deg) scale(0.6); opacity: 0; }
-    20% { opacity: 1; }
-    50% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
-    80% { transform: translate(20vw, -8vh) rotate(8deg) scale(1.1); opacity: 1; }
-    100% { transform: translate(110vw, -25vh) rotate(15deg) scale(1.4); opacity: 0; }
-  }
-
-  .contrail {
-    position: absolute;
-    top: 50%; right: 100%;
-    width: 240px; height: 4px;
-    background: linear-gradient(90deg, transparent, rgba(0,212,255,0.6) 50%, var(--accent));
-    transform: translateY(-50%);
-    border-radius: 2px;
-    filter: blur(1.5px);
-  }
-
-  .intro-text {
-    position: absolute; bottom: 22%;
-    width: 100%; text-align: center;
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: 28px;
-    letter-spacing: 6px;
-    color: var(--accent);
-    opacity: 0;
-    animation: textIn 0.5s 0.9s ease forwards;
-  }
+  @keyframes cloudDrift { 0% { transform: translateX(0); } 100% { transform: translateX(-300px); } }
+  .runway { position: absolute; bottom: 25%; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent2), transparent); opacity: 0.5; }
+  .plane-fly { position: relative; width: 140px; height: 140px; color: var(--accent); animation: planeFlight 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+  @keyframes planeFlight { 0% { transform: translate(-100vw, 30vh) rotate(-5deg) scale(0.6); opacity: 0; } 20% { opacity: 1; } 50% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; } 80% { transform: translate(20vw, -8vh) rotate(8deg) scale(1.1); opacity: 1; } 100% { transform: translate(110vw, -25vh) rotate(15deg) scale(1.4); opacity: 0; } }
+  .contrail { position: absolute; top: 50%; right: 100%; width: 240px; height: 4px; background: linear-gradient(90deg, transparent, rgba(0,212,255,0.6) 50%, var(--accent)); transform: translateY(-50%); border-radius: 2px; filter: blur(1.5px); }
+  .intro-text { position: absolute; bottom: 22%; width: 100%; text-align: center; font-family: var(--display); font-weight: 900; font-size: 28px; letter-spacing: 6px; color: var(--accent); opacity: 0; animation: textIn 0.5s 0.9s ease forwards; }
   .intro-text span { color: var(--accent2); }
-  .intro-sub {
-    position: absolute; bottom: 18%;
-    width: 100%; text-align: center;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 3px;
-    opacity: 0;
-    animation: textIn 0.5s 1.1s ease forwards;
-  }
+  .intro-sub { position: absolute; bottom: 18%; width: 100%; text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 3px; opacity: 0; animation: textIn 0.5s 1.1s ease forwards; }
   @keyframes textIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* ============ HEADER ============ */
   .header { background: var(--surface); border-bottom: 2px solid var(--accent); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
   .header-left { display: flex; align-items: center; gap: 10px; }
   .logo { font-family: var(--display); font-weight: 900; font-size: 22px; color: var(--accent); letter-spacing: 2px; }
@@ -126,7 +52,6 @@
   .scan-count { font-size: 12px; color: var(--muted); }
   .scan-count b { color: var(--success); font-weight: 400; }
 
-  /* ============ TABS ============ */
   .tabs { display: flex; gap: 4px; padding: 12px 16px 0; max-width: 700px; margin: 0 auto; width: 100%; border-bottom: 1px solid var(--border); }
   .tab { background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: 1.5px; padding: 10px 16px; cursor: pointer; transition: all 0.15s; text-transform: uppercase; }
   .tab:hover { color: var(--text); }
@@ -134,14 +59,12 @@
   .tab .pill { background: var(--accent2); color: var(--bg); font-size: 9px; padding: 1px 6px; border-radius: 8px; margin-left: 5px; font-weight: 700; }
 
   main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 700px; margin: 0 auto; width: 100%; }
-
   .tab-content { display: none; flex-direction: column; gap: 14px; }
   .tab-content.active { display: flex; }
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
   .card-label { font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 10px 14px 6px; }
 
-  /* ============ CAMERA ============ */
   .cam-wrap { position: relative; background: #000; margin: 0 14px 10px; border-radius: 6px; overflow: hidden; min-height: 220px; display: flex; align-items: center; justify-content: center; }
   #vid { width: 100%; display: none; border-radius: 6px; }
   #vid.on { display: block; }
@@ -163,66 +86,15 @@
   .scan-line { position:absolute;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanMove 2s ease-in-out infinite;display:none;opacity:0.8; }
   @keyframes scanMove { 0%{top:15%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:85%;opacity:0;} }
 
-  /* ============ PLANE PROGRESS BAR ============ */
-  .plane-progress {
-    display: none;
-    position: relative;
-    height: 36px;
-    margin: 4px 14px 8px;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 18px;
-    overflow: hidden;
-  }
+  /* PLANE PROGRESS */
+  .plane-progress { display: none; position: relative; height: 36px; margin: 4px 14px 8px; background: var(--bg); border: 1px solid var(--border2); border-radius: 18px; overflow: hidden; }
   .plane-progress.active { display: block; }
-  .plane-track {
-    position: absolute;
-    top: 50%; left: 0;
-    transform: translateY(-50%);
-    width: 100%;
-    height: 1px;
-    background: repeating-linear-gradient(90deg, var(--border2) 0, var(--border2) 4px, transparent 4px, transparent 8px);
-  }
-  .plane-flying {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 28px; height: 28px;
-    color: var(--accent);
-    transition: left 0.4s ease-out;
-    filter: drop-shadow(0 0 6px rgba(0,212,255,0.7));
-  }
-  .plane-trail {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent));
-    transform: translateY(-50%);
-    transition: width 0.4s ease-out;
-    opacity: 0.6;
-    filter: blur(0.5px);
-  }
-  .progress-status {
-    position: absolute;
-    bottom: 2px; left: 14px;
-    font-family: var(--display);
-    font-size: 9px;
-    letter-spacing: 1.5px;
-    color: var(--accent);
-    text-transform: uppercase;
-  }
-  .progress-pct {
-    position: absolute;
-    bottom: 2px; right: 14px;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-  }
-  @keyframes planePulse {
-    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-    50% { transform: translate(-50%, -52%) rotate(-3deg); }
-  }
+  .plane-track { position: absolute; top: 50%; left: 0; transform: translateY(-50%); width: 100%; height: 1px; background: repeating-linear-gradient(90deg, var(--border2) 0, var(--border2) 4px, transparent 4px, transparent 8px); }
+  .plane-flying { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 28px; height: 28px; color: var(--accent); transition: left 0.4s ease-out; filter: drop-shadow(0 0 6px rgba(0,212,255,0.7)); }
+  .plane-trail { position: absolute; top: 50%; left: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent)); transform: translateY(-50%); transition: width 0.4s ease-out; opacity: 0.6; filter: blur(0.5px); }
+  .progress-status { position: absolute; bottom: 2px; left: 14px; font-family: var(--display); font-size: 9px; letter-spacing: 1.5px; color: var(--accent); text-transform: uppercase; }
+  .progress-pct { position: absolute; bottom: 2px; right: 14px; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  @keyframes planePulse { 0%, 100% { transform: translate(-50%, -50%) rotate(0deg); } 50% { transform: translate(-50%, -52%) rotate(-3deg); } }
   .plane-flying svg { animation: planePulse 0.8s ease-in-out infinite; }
 
   .cam-controls { display:flex;gap:10px;padding:8px 14px 14px; }
@@ -241,7 +113,7 @@
   .debug-toggle:hover { color: var(--accent); }
   .debug-text { display: none; padding: 0 14px 14px; }
   .debug-text.show { display: block; }
-  .debug-text pre { background: var(--bg); border: 1px solid var(--border2); border-radius: 4px; padding: 10px; font-size: 10px; color: var(--muted); max-height: 150px; overflow: auto; white-space: pre-wrap; }
+  .debug-text pre { background: var(--bg); border: 1px solid var(--border2); border-radius: 4px; padding: 10px; font-size: 10px; color: var(--muted); max-height: 200px; overflow: auto; white-space: pre-wrap; }
 
   .fields-wrap { padding:0 14px 14px;display:flex;flex-direction:column;gap:10px; }
   .field-row { display:flex;flex-direction:column;gap:4px; }
@@ -266,7 +138,6 @@
 
   .actions-section { padding-bottom:40px; }
 
-  /* ============ SAVED FILES TAB ============ */
   .saved-info { font-size: 11px; color: var(--muted); padding: 0 14px 10px; line-height: 1.6; }
   .saved-info b { color: var(--accent2); }
   .saved-list { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 14px; }
@@ -285,20 +156,14 @@
   .toast.show { transform:translateX(-50%) translateY(0); }
   .toast.err { background:var(--danger);color:#fff; }
   .toast.wrn { background:var(--accent2);color:#fff; }
-
   canvas { display:none; }
 </style>
 </head>
 <body>
 
-<!-- INTRO PLANE ANIMATION -->
 <div class="intro" id="intro">
   <div class="sky-stars"></div>
-  <div class="clouds">
-    <div class="cloud"></div>
-    <div class="cloud"></div>
-    <div class="cloud"></div>
-  </div>
+  <div class="clouds"><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div></div>
   <div class="runway"></div>
   <div class="plane-fly">
     <div class="contrail"></div>
@@ -311,10 +176,7 @@
 </div>
 
 <div class="header">
-  <div class="header-left">
-    <div class="logo">FAA<span>.</span>SCAN</div>
-    <div class="badge">M.C. DEAN</div>
-  </div>
+  <div class="header-left"><div class="logo">FAA<span>.</span>SCAN</div><div class="badge">M.C. DEAN</div></div>
   <div class="scan-count">CAPTURED: <b id="countDisplay">0</b></div>
 </div>
 
@@ -325,7 +187,6 @@
 
 <main>
 
-  <!-- ============ SCANNER TAB ============ -->
   <div class="tab-content active" id="content-scanner">
 
     <div class="card">
@@ -338,22 +199,18 @@
           <button class="start-btn" id="startBtn" onclick="startCamera()">▶&nbsp; START CAMERA</button>
           <div class="cam-sub">Click above to activate the rear/back camera<br>then capture a clear photo of the label</div>
         </div>
-        <div class="corners" id="corners" style="display:none;">
-          <div class="corner tl"></div><div class="corner tr"></div>
-          <div class="corner bl"></div><div class="corner br"></div>
-        </div>
+        <div class="corners" id="corners" style="display:none;"><div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div></div>
         <div class="scan-line" id="scanLine"></div>
       </div>
 
-      <!-- PLANE PROGRESS BAR -->
       <div class="plane-progress" id="planeProgress">
         <div class="plane-track"></div>
         <div class="plane-trail" id="planeTrail" style="width:0%;"></div>
         <div class="plane-flying" id="planeFly" style="left:0%;">
-        <svg viewBox="0 0 100 100" width="28" height="28" fill="currentColor">
-          <path d="M 95 50 L 70 42 L 55 25 L 48 25 L 55 42 L 25 42 L 18 32 L 12 32 L 16 50 L 12 68 L 18 68 L 25 58 L 55 58 L 48 75 L 55 75 L 70 58 Z"/>
-        </svg>
-      </div>
+          <svg viewBox="0 0 100 100" width="28" height="28" fill="currentColor">
+            <path d="M 95 50 L 70 42 L 55 25 L 48 25 L 55 42 L 25 42 L 18 32 L 12 32 L 16 50 L 12 68 L 18 68 L 25 58 L 55 58 L 48 75 L 55 75 L 70 58 Z"/>
+          </svg>
+        </div>
         <div class="progress-status" id="progressStatus">PROCESSING...</div>
         <div class="progress-pct" id="progressPct">0%</div>
       </div>
@@ -365,7 +222,7 @@
           <input type="file" id="fileInput" accept="image/*" onchange="doUpload(event)">
         </label>
       </div>
-      <div class="debug-toggle" onclick="toggleDebug()">▸ Show raw OCR text (for debugging)</div>
+      <div class="debug-toggle" onclick="toggleDebug()">▸ Show raw OCR text + extraction details</div>
       <div class="debug-text" id="debugText"><pre id="debugPre">No scan yet</pre></div>
     </div>
 
@@ -384,6 +241,7 @@
             <option value="'UTR-9216ABTRLNL">'UTR-9216ABTRLNL</option>
             <option value="'LNL-1320-S3">'LNL-1320-S3</option>
             <option value="'900W2036-QXYON">'900W2036-QXYON</option>
+            <option value="'LNL-M4420">'LNL-M4420</option>
           </select>
         </div>
         <div class="field-row">
@@ -396,17 +254,14 @@
 
     <div class="card">
       <div class="card-label">◈ SCAN LIST</div>
-      <div class="asset-section" id="assetList">
-        <div class="empty-list">No assets added yet</div>
-      </div>
+      <div class="asset-section" id="assetList"><div class="empty-list">No assets added yet</div></div>
     </div>
 
     <div class="actions-section">
-      <button class="btn btn-danger" onclick="finishAndSend()">■ END SESSION &amp; SEND CSV</button>
+      <button class="btn btn-danger" onclick="finishAndSend()">■ END SESSION &amp; DOWNLOAD CSV</button>
     </div>
   </div>
 
-  <!-- ============ SAVED FILES TAB ============ -->
   <div class="tab-content" id="content-saved">
     <div class="card">
       <div class="card-label">◈ SAVED CSV FILES</div>
@@ -424,21 +279,18 @@
 
 <canvas id="captureCanvas"></canvas>
 <canvas id="preprocessCanvas"></canvas>
+<canvas id="preprocessCanvas2"></canvas>
 <div class="toast" id="toast"></div>
 
 <script>
-// ============ INTRO ANIMATION ============
 window.addEventListener('load', () => {
   setTimeout(() => { document.getElementById('intro').classList.add('hide'); }, 1700);
 });
 
-// ============ STATE ============
 let assets = [], stream = null, tesseractWorker = null;
-let savedFiles = []; // { id, name, csv, savedAt, expiresAt }
+let savedFiles = [];
+const FILE_TTL_MS = 30 * 60 * 1000;
 
-const FILE_TTL_MS = 30 * 60 * 1000; // 30 minutes
-
-// ============ TABS ============
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -447,7 +299,6 @@ function switchTab(name) {
   if (name === 'saved') renderSavedFiles();
 }
 
-// ============ TOAST ============
 function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast' + (type ? ' ' + type : '');
@@ -457,7 +308,6 @@ function showToast(msg, type) {
 
 function toggleDebug() { document.getElementById('debugText').classList.toggle('show'); }
 
-// ============ CAMERA ============
 async function startCamera() {
   const btn = document.getElementById('startBtn');
   btn.textContent = 'Starting...'; btn.disabled = true;
@@ -496,7 +346,7 @@ function doUpload(e) {
   r.onload = ev => {
     const img = new Image();
     img.onload = () => {
-      const c = document.getElementById('captureCanvas'), MAX = 2400;
+      const c = document.getElementById('captureCanvas'), MAX = 2800;
       let w = img.width, h = img.height;
       if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w = MAX; } else { w = Math.round(w*MAX/h); h = MAX; } }
       c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h);
@@ -526,7 +376,6 @@ function recapture() {
   cb.textContent = '⊙ Capture'; cb.onclick = doCapture;
 }
 
-// ============ PLANE PROGRESS ============
 function setProgress(pct, status) {
   const clamped = Math.max(0, Math.min(100, pct));
   document.getElementById('planeFly').style.left = clamped + '%';
@@ -534,33 +383,69 @@ function setProgress(pct, status) {
   document.getElementById('progressPct').textContent = Math.round(clamped) + '%';
   if (status) document.getElementById('progressStatus').textContent = status;
 }
-
 function showProgress(show) {
   document.getElementById('planeProgress').classList.toggle('active', show);
   if (show) setProgress(0, 'PROCESSING...');
 }
 
-// ============ IMAGE PREPROCESS ============
-function preprocessImage(dataUrl) {
+// ============ ADVANCED IMAGE PREPROCESSING ============
+// Three different preprocessing variants — we'll OCR all of them
+// and pick the result with the highest confidence on key fields.
+
+function preprocessVariant(dataUrl, variant) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
-      const c = document.getElementById('preprocessCanvas');
-      const scale = img.width < 1500 ? 2 : 1.3;
+      const c = (variant === 'B') ? document.getElementById('preprocessCanvas2')
+                                  : document.getElementById('preprocessCanvas');
+      // Upscale aggressively for small text
+      const scale = img.width < 1200 ? 2.5 : (img.width < 2000 ? 1.8 : 1.3);
       c.width = Math.round(img.width * scale);
       c.height = Math.round(img.height * scale);
       const ctx = c.getContext('2d');
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, c.width, c.height);
+
       const imgData = ctx.getImageData(0, 0, c.width, c.height);
       const d = imgData.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const gray = 0.3 * d[i] + 0.59 * d[i+1] + 0.11 * d[i+2];
-        let v = gray < 128 ? gray * 0.7 : 255 - (255 - gray) * 0.7;
-        v = Math.max(0, Math.min(255, v));
-        d[i] = d[i+1] = d[i+2] = v;
+
+      if (variant === 'A') {
+        // High contrast grayscale + sharpening-like effect
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = 0.3 * d[i] + 0.59 * d[i+1] + 0.11 * d[i+2];
+          let v = gray < 110 ? gray * 0.6 : 255 - (255 - gray) * 0.6;
+          v = Math.max(0, Math.min(255, v));
+          d[i] = d[i+1] = d[i+2] = v;
+        }
+      } else if (variant === 'B') {
+        // Adaptive threshold — pure black/white for crisp digits
+        // First compute mean brightness
+        let total = 0, samples = 0;
+        for (let i = 0; i < d.length; i += 16) {
+          total += 0.3 * d[i] + 0.59 * d[i+1] + 0.11 * d[i+2];
+          samples++;
+        }
+        const mean = total / samples;
+        const threshold = mean * 0.85;
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = 0.3 * d[i] + 0.59 * d[i+1] + 0.11 * d[i+2];
+          const v = gray < threshold ? 0 : 255;
+          d[i] = d[i+1] = d[i+2] = v;
+        }
+      } else {
+        // C — Otsu-like soft threshold for medium-quality photos
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = 0.3 * d[i] + 0.59 * d[i+1] + 0.11 * d[i+2];
+          // Strong contrast curve
+          let v;
+          if (gray < 80) v = 0;
+          else if (gray > 180) v = 255;
+          else v = Math.round((gray - 80) * 255 / 100);
+          d[i] = d[i+1] = d[i+2] = v;
+        }
       }
+
       ctx.putImageData(imgData, 0, 0);
       resolve(c.toDataURL('image/png'));
     };
@@ -574,7 +459,7 @@ async function getWorker() {
   tesseractWorker = await Tesseract.createWorker('eng', 1, {
     logger: m => {
       if (m.status === 'recognizing text') {
-        const overall = 30 + m.progress * 65;
+        const overall = 30 + m.progress * 60;
         setProgress(overall, 'READING TEXT...');
       } else if (m.status === 'loading tesseract core') {
         setProgress(10, 'LOADING ENGINE...');
@@ -585,10 +470,20 @@ async function getWorker() {
       }
     }
   });
-  await tesseractWorker.setParameters({
-    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-./: '
-  });
   return tesseractWorker;
+}
+
+async function ocrWithMode(worker, imgUrl, psmMode) {
+  await worker.setParameters({
+    tessedit_pageseg_mode: String(psmMode),
+    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-./:#&_+ '
+  });
+  const result = await worker.recognize(imgUrl);
+  return {
+    text: result.data.text || '',
+    words: (result.data.words || []).filter(w => w.text && w.text.trim()),
+    confidence: result.data.confidence || 0
+  };
 }
 
 async function processImage(dataUrl) {
@@ -596,20 +491,34 @@ async function processImage(dataUrl) {
   showProgress(true);
 
   try {
-    setProgress(5, 'PREPROCESSING...');
-    const processedUrl = await preprocessImage(dataUrl);
-    setProgress(25, 'PREPARING ENGINE...');
+    setProgress(5, 'PREPROCESSING (A)...');
+    const variantA = await preprocessVariant(dataUrl, 'A');
+    setProgress(15, 'PREPROCESSING (B)...');
+    const variantB = await preprocessVariant(dataUrl, 'B');
+    setProgress(22, 'PREPROCESSING (C)...');
+    const variantC = await preprocessVariant(dataUrl, 'C');
+
+    setProgress(28, 'PREPARING ENGINE...');
     const worker = await getWorker();
-    const result = await worker.recognize(processedUrl);
-    setProgress(95, 'PARSING TEXT...');
-    const rawText = result.data.text;
 
-    // Build word-level bounding box list (helps locate FAA sticker spatially)
-    const words = (result.data.words || []).filter(w => w.text && w.text.trim());
+    // Pass 1: variant A with default page segmentation
+    setProgress(35, 'OCR PASS 1/3...');
+    const passA = await ocrWithMode(worker, variantA, 6);
+    // Pass 2: variant B with sparse text mode (better for labels)
+    setProgress(60, 'OCR PASS 2/3...');
+    const passB = await ocrWithMode(worker, variantB, 11);
+    // Pass 3: variant C with auto layout
+    setProgress(85, 'OCR PASS 3/3...');
+    const passC = await ocrWithMode(worker, variantC, 3);
 
-    document.getElementById('debugPre').textContent = rawText || '(no text detected)';
+    setProgress(95, 'PARSING RESULTS...');
 
-    const { assetTag, serial, modelValue } = parseLabel(rawText, words);
+    // Combine all OCR results — search across ALL of them
+    const passes = [passA, passB, passC];
+    const debugInfo = passes.map((p, i) => `=== PASS ${i+1} (conf: ${Math.round(p.confidence)}) ===\n${p.text}`).join('\n\n');
+
+    const { assetTag, serial, modelValue, debug } = parseAllPasses(passes);
+    document.getElementById('debugPre').textContent = debug + '\n\n' + debugInfo;
 
     let n = 0;
     if (assetTag) { setGreen('fieldAssetTag', assetTag); n++; }
@@ -621,9 +530,8 @@ async function processImage(dataUrl) {
     }
 
     setProgress(100, 'COMPLETE');
-
     document.getElementById('addBtn').disabled = false;
-    if (n === 0) showToast('No data matched — see raw OCR text below', 'wrn');
+    if (n === 0) showToast('No data matched — see debug below', 'wrn');
     else showToast('✓ ' + n + ' field' + (n > 1 ? 's' : '') + ' extracted — verify & select model');
   } catch(err) {
     console.error(err);
@@ -634,224 +542,287 @@ async function processImage(dataUrl) {
   }
 }
 
-// ============ PARSE LABEL ============
-// Detection runs in this order. Each branch is fully isolated — changes to one
-// branch CANNOT affect another. Add new models as their own branch.
-//
-// BRANCH 1 — Veridt 900W2036 (DO NOT TOUCH — works perfectly)
-// BRANCH 2 — UTR-9216 / UTR-9202 / LNL-1320 (M.C. Dean blue label format)
-// BRANCH ? — fallback for unknown labels
+// ============ ULTRA-SMART PARSING ============
+// Vote-based extraction across multiple OCR passes
 
-function parseLabel(text, words) {
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  const upperText = text.toUpperCase();
-  let assetTag = null, serial = null, modelValue = null;
+function parseAllPasses(passes) {
+  const debug = [];
 
-  // -------- ASSET TAG (universal — works for ALL reader types) --------
-  // The "Property of FAA" sticker is identifiable by:
-  //   - Contains the word "Property" (anchor #1)
-  //   - Contains "FAA" (anchor #2)
-  //   - Has a QR code on the right side
-  //   - The 6-digit asset tag is BELOW these words
-  //
-  // Strategy (in priority order):
-  //   1. SPATIAL: Use word bounding boxes to find a 6-digit number
-  //      that is geometrically near "Property" / "FAA" words
-  //      (same column area, slightly below)
-  //   2. TEXT-ROW: Fall back to line-based detection (current method)
-  //   3. STANDALONE: Last resort, find a 6-digit number on its own line
+  // ---- 1. MODEL DETECTION ----
+  // Search across ALL passes for known model strings
+  const allText = passes.map(p => p.text).join('\n').toUpperCase();
+  let modelValue = null;
+  let labelType = 'UNKNOWN';
 
-  // ---- Strategy 1: SPATIAL (using word bounding boxes from OCR) ----
-  if (words && words.length) {
-    // Find the bounding box of the Property/FAA sticker
-    const stickerWords = words.filter(w => /property|^FAA$/i.test(w.text));
-    if (stickerWords.length) {
-      // Compute the sticker's approximate bounding box
-      const minX = Math.min(...stickerWords.map(w => w.bbox.x0));
-      const maxX = Math.max(...stickerWords.map(w => w.bbox.x1));
-      const minY = Math.min(...stickerWords.map(w => w.bbox.y0));
-      const maxY = Math.max(...stickerWords.map(w => w.bbox.y1));
-
-      const stickerHeight = maxY - minY;
-      const stickerWidth = maxX - minX;
-
-      // The asset tag is below the "Property of FAA" text but still close.
-      // Allow a search box that extends ~3x the height downward, and 2x the width horizontally
-      const searchMinX = minX - stickerWidth * 0.3;
-      const searchMaxX = maxX + stickerWidth * 0.3;
-      const searchMinY = minY;
-      const searchMaxY = maxY + stickerHeight * 4;
-
-      // Find candidate 6-digit numbers in this region
-      const candidates = words.filter(w => {
-        if (!/^\d{6}$/.test(w.text.trim())) return false;
-        const cx = (w.bbox.x0 + w.bbox.x1) / 2;
-        const cy = (w.bbox.y0 + w.bbox.y1) / 2;
-        return cx >= searchMinX && cx <= searchMaxX &&
-               cy >= searchMinY && cy <= searchMaxY;
-      });
-
-      if (candidates.length) {
-        // Pick the one CLOSEST to the Property/FAA anchor (smallest y-distance below)
-        candidates.sort((a, b) => {
-          const ay = (a.bbox.y0 + a.bbox.y1) / 2;
-          const by = (b.bbox.y0 + b.bbox.y1) / 2;
-          // Prefer candidates BELOW the anchor (positive distance)
-          return Math.abs(ay - maxY) - Math.abs(by - maxY);
-        });
-        assetTag = candidates[0].text.trim();
-      }
+  // Veridt label (M.C. Dean Veridt 900W2036 reader)
+  if (/VERIDT|900W?2036|STEALTH/.test(allText)) {
+    modelValue = "'900W2036-QXYON";
+    labelType = 'VERIDT';
+  } else if (/LNL-?M4420|M4420/.test(allText)) {
+    // LNL-M4420 controller — small white label with S/N format
+    // Must be checked BEFORE generic LNL patterns so it wins
+    modelValue = "'LNL-M4420";
+    labelType = 'LNL_M4420';
+  } else {
+    // M.C. Dean blue label parts (longest-match-first)
+    const PARTS = [
+      ['UTR-?9216',     "'UTR-9216ABTRLNL"],
+      ['UTR-?9202',     "'UTR-9202ABTRLNL"],
+      ['LNL-?1320-?S3', "'LNL-1320-S3"],
+      ['LNL-?1320',     "'LNL-1320-S3"]
+    ];
+    for (const [pattern, val] of PARTS) {
+      const re = new RegExp(pattern, 'i');
+      if (re.test(allText)) { modelValue = val; labelType = 'MCDEAN_BLUE'; break; }
     }
   }
+  debug.push('Label type: ' + labelType);
+  debug.push('Model: ' + (modelValue || 'not detected'));
 
-  // ---- Strategy 2: TEXT-ROW (line-based, ignoring blue-label header rows) ----
-  if (!assetTag) {
+  // ---- 2. ASSET TAG ----
+  // Vote across all passes — look for 6-digit candidates near "Property"/"FAA" anchor
+  const assetCandidates = []; // { value, score, source }
+
+  for (let pi = 0; pi < passes.length; pi++) {
+    const p = passes[pi];
+    const lines = p.text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+    // Spatial: word-box near Property/FAA anchor
+    if (p.words && p.words.length) {
+      const anchorWords = p.words.filter(w => /^property$|^faa$|^of$/i.test(w.text.trim()));
+      if (anchorWords.length) {
+        const minY = Math.min(...anchorWords.map(w => w.bbox.y0));
+        const maxY = Math.max(...anchorWords.map(w => w.bbox.y1));
+        const minX = Math.min(...anchorWords.map(w => w.bbox.x0));
+        const maxX = Math.max(...anchorWords.map(w => w.bbox.x1));
+        const h = maxY - minY;
+        const w = maxX - minX;
+        // Search zone: extends DOWN from anchor by 6x text height, and extends LEFT/RIGHT generously
+        const zone = {
+          x0: minX - w * 1.0,
+          x1: maxX + w * 1.5,
+          y0: minY - h * 0.5,
+          y1: maxY + h * 6
+        };
+        for (const word of p.words) {
+          const t = word.text.trim();
+          if (!/^\d{6}$/.test(t)) continue;
+          const cx = (word.bbox.x0 + word.bbox.x1) / 2;
+          const cy = (word.bbox.y0 + word.bbox.y1) / 2;
+          if (cx >= zone.x0 && cx <= zone.x1 && cy >= zone.y0 && cy <= zone.y1) {
+            // Score: closer to anchor = higher score; below anchor preferred
+            const distance = Math.abs(cy - maxY);
+            const score = 100 + (word.confidence || 50) - distance * 0.05;
+            assetCandidates.push({ value: t, score, source: 'spatial-pass' + (pi+1) });
+          }
+        }
+      }
+    }
+
+    // Text-row: lines containing "Property" + 6 digits
     for (let i = 0; i < lines.length; i++) {
       if (/property/i.test(lines[i])) {
-        // Look on this line + next 2 lines for a clean 6-digit number
-        for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
-          // Reject blue-label header / metadata rows
+        for (let j = i; j <= Math.min(i + 3, lines.length - 1); j++) {
           if (/faamig|psems|migration|mmc-rd|po\s*no|csi|neca/i.test(lines[j])) continue;
           const m = lines[j].match(/(?:^|\s)(\d{6})(?:\s|$)/) || lines[j].match(/\b(\d{6})\b/);
-          if (m) { assetTag = m[1]; break; }
+          if (m) {
+            assetCandidates.push({ value: m[1], score: 80, source: 'textrow-pass' + (pi+1) });
+          }
         }
-        if (assetTag) break;
       }
     }
   }
 
-  // ---- Strategy 3: STANDALONE 6-digit number on its own line ----
-  if (!assetTag) {
+  // Standalone fallback: search all text for 6-digit sequences not near header noise
+  for (let pi = 0; pi < passes.length; pi++) {
+    const lines = passes[pi].text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     for (const line of lines) {
-      // Skip lines that contain known non-asset-tag text
       if (/faamig|psems|migration|mmc-rd|p[o0]\s*no|po\b|csi\s*\d+|neca|item|manufacturer|part\s*no|receiving|printed|quantity|section/i.test(line)) continue;
-      // Skip date-looking lines
       if (/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(line)) continue;
-
-      const m = line.match(/^\s*(\d{6})\s*$/) ||
-                line.match(/(?:^|[^\d-])(\d{6})(?:[^\d-]|$)/);
-      if (m) {
-        const num = m[1];
-        const allNums = line.match(/\d+/g) || [];
-        if (allNums.length === 1 || (allNums.length <= 2 && allNums.includes(num))) {
-          assetTag = num;
-          break;
+      const matches = line.match(/(?:^|[^\d-])(\d{6})(?:[^\d-]|$)/g);
+      if (matches) {
+        for (const m of matches) {
+          const num = m.match(/\d{6}/)[0];
+          // Lower score for standalone since less reliable
+          assetCandidates.push({ value: num, score: 40, source: 'fallback-pass' + (pi+1) });
         }
       }
     }
   }
 
-  // ============================================================
-  // BRANCH 1 — VERIDT 900W2036 LABEL  (DO NOT MODIFY — works perfectly)
-  // Identified by:  text contains "VERIDT" or "900W2036"
-  // Serial format:  MC + 8 digits (e.g. MC08250256)
-  // ============================================================
-  if (upperText.includes('VERIDT') || upperText.includes('900W2036')) {
-    modelValue = "'900W2036-QXYON";
+  // Tally by frequency + best score
+  const assetTagPick = pickBestCandidate(assetCandidates);
+  debug.push('Asset tag candidates: ' + JSON.stringify(assetCandidates.map(c => `${c.value}(${Math.round(c.score)})`)));
+  debug.push('Asset tag picked: ' + (assetTagPick || 'none'));
 
-    // Find serial after "Serial Number:" label
-    for (let i = 0; i < lines.length; i++) {
-      if (/serial/i.test(lines[i])) {
-        for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
-          const valueArea = lines[j].replace(/.*serial\s*(number|no)?\.?:?\s*/i, '');
-          if (!valueArea) continue;
-          const alphaMatch = valueArea.match(/\b([A-Z]{1,4}\d{6,12})\b/i);
-          if (alphaMatch) {
-            let raw = alphaMatch[1].toUpperCase();
-            // Force letter prefix to MC (handle OCR misreads of M)
-            raw = raw.replace(/^[A-Z]+/, 'MC');
-            serial = raw;
-            break;
+  // ---- 3. SERIAL NUMBER ----
+  const serialCandidates = []; // { value, score, source }
+
+  for (let pi = 0; pi < passes.length; pi++) {
+    const p = passes[pi];
+    const lines = p.text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+    if (labelType === 'LNL_M4420') {
+      // LNL-M4420: alphanumeric serial that ALWAYS starts with HL0P
+      // (the H is followed by L, then a zero, then P — total ~10 chars)
+      // OCR commonly misreads the prefix as XLOP, HLOP, NL0P, ML0P, etc.
+      // We force the prefix to HL0P since it's a known constant.
+      // Examples: HL0P8S00WF (HL0P + 6 alphanumeric chars)
+      const SERIAL_PREFIX = 'HL0P';
+
+      // Helper: normalize whatever the OCR read to the correct HL0P prefix
+      function normalizeM4420Serial(raw) {
+        const u = raw.toUpperCase();
+        // The serial is exactly 10 characters total: HL0P + 6 alphanumeric
+        if (u.length < 8 || u.length > 12) return null;
+        // Replace the first 4 characters with the known prefix
+        const corrected = SERIAL_PREFIX + u.slice(4);
+        return corrected;
+      }
+
+      // Strategy 1: Find token on the S/N row
+      for (let i = 0; i < lines.length; i++) {
+        if (/\bS\s*\/?\s*N\b/i.test(lines[i])) {
+          for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
+            const valueArea = lines[j].replace(/.*\bS\s*\/?\s*N\s*:?\s*/i, '');
+            const candidates = valueArea.match(/\b([A-Z0-9]{6,14})\b/gi) || [];
+            for (const c of candidates) {
+              const u = c.toUpperCase();
+              if (!/[A-Z]/.test(u) || !/\d/.test(u)) continue;
+              if (/^LNL/i.test(u)) continue;
+              const normalized = normalizeM4420Serial(u);
+              if (!normalized) continue;
+              const lengthBonus = normalized.length === 10 ? 30 : (normalized.length === 9 || normalized.length === 11 ? 15 : 0);
+              serialCandidates.push({ value: normalized, score: 120 + lengthBonus, source: 'lnlm4420-row-pass' + (pi+1) });
+            }
           }
         }
-        if (serial) break;
       }
-    }
-    // Fallback: scan whole text for MC-style serial
-    if (!serial) {
-      const alphaAll = (text.match(/\b[A-Z]{1,4}\d{6,12}\b/g) || []);
-      if (alphaAll.length) {
-        let s = alphaAll.sort((a, b) => b.length - a.length)[0].toUpperCase();
-        s = s.replace(/^[A-Z]+/, 'MC');
-        serial = s;
-      }
-    }
 
-    return { assetTag, serial, modelValue };
-  }
+      // Strategy 2: Search the whole text for tokens that LOOK LIKE the M4420 serial format
+      // (anything 8-12 chars with mix of letters/digits, where the prefix could be a misread of HL0P)
+      const allTokens = p.text.match(/\b[A-Z0-9]{8,12}\b/g) || [];
+      for (const tok of allTokens) {
+        const u = tok.toUpperCase();
+        if (!/[A-Z]/.test(u) || !/\d/.test(u)) continue;
+        // Reject obvious non-serial junk
+        if (/^LNL|^M44|^FAA|^MMC|^WS\d|^FW|^KC|^MP\d/i.test(u)) continue;
+        if (/^[A-Z]{4,}$/.test(u)) continue;
 
-  // ============================================================
-  // BRANCH 2 — M.C. DEAN BLUE LABEL  (UTR-9216, UTR-9202, LNL-1320, etc.)
-  // Identified by:  has "Part No" label AND value matches a known prefix
-  // Serial format:  pure digits, typically 14 digits (e.g. 82162523700767)
-  // ============================================================
-  const MC_DEAN_PARTS = [
-    { match: 'UTR-9216',     value: "'UTR-9216ABTRLNL" },
-    { match: 'UTR9216',      value: "'UTR-9216ABTRLNL" },
-    { match: 'UTR-9202',     value: "'UTR-9202ABTRLNL" },
-    { match: 'UTR9202',      value: "'UTR-9202ABTRLNL" },
-    { match: 'LNL-1320-S3',  value: "'LNL-1320-S3"     },
-    { match: 'LNL1320S3',    value: "'LNL-1320-S3"     },
-    { match: 'LNL-1320',     value: "'LNL-1320-S3"     }
-  ];
-  // Sort longest match first so UTR-9216 matches before UTR-9
-  MC_DEAN_PARTS.sort((a, b) => b.match.length - a.match.length);
+        // Heuristic: does the start of this token plausibly look like HL0P?
+        // HL0P could be misread as: XLOP, HLOP, NL0P, ML0P, HLO0P, IL0P, HI0P, etc.
+        // Check if the second char is L (commonly correct) and 4th is P (commonly correct)
+        const startsLikeHL0P =
+          /^[HXNMI][LI1][O0Q][PB]/i.test(u) ||  // typical OCR confusions
+          u.startsWith('HL0P') ||
+          u.startsWith('HLOP') ||
+          u.startsWith('XLOP');
 
-  for (const p of MC_DEAN_PARTS) {
-    if (upperText.includes(p.match)) { modelValue = p.value; break; }
-  }
-
-  if (modelValue) {
-    // M.C. Dean blue-label serial: digit-only, on the row labeled "Serial No"
-    for (let i = 0; i < lines.length; i++) {
-      if (/serial/i.test(lines[i])) {
-        for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
-          // Strip the "Serial No." label
-          const valueArea = lines[j].replace(/.*serial\s*(number|no)?\.?:?\s*/i, '');
-          // Pure digit sequence, prefer longer ones (10-16 digits)
-          const digitMatches = valueArea.match(/\b(\d{10,16})\b/g);
-          if (digitMatches) {
-            serial = digitMatches.sort((a, b) => b.length - a.length)[0];
-            break;
+        if (startsLikeHL0P) {
+          const normalized = normalizeM4420Serial(u);
+          if (normalized) {
+            const lengthBonus = normalized.length === 10 ? 30 : 0;
+            serialCandidates.push({ value: normalized, score: 90 + lengthBonus, source: 'lnlm4420-prefix-pass' + (pi+1) });
+          }
+        } else {
+          // Last-resort: still consider it but at lower confidence — only if it has the right length
+          if (u.length === 10) {
+            const normalized = normalizeM4420Serial(u);
+            if (normalized) {
+              serialCandidates.push({ value: normalized, score: 50, source: 'lnlm4420-fallback' + (pi+1) });
+            }
           }
         }
-        if (serial) break;
       }
-    }
-    // Fallback: longest pure digit sequence in whole text (avoid PO numbers and barcodes)
-    if (!serial) {
-      const allLong = (text.match(/\b\d{12,16}\b/g) || []);
-      if (allLong.length) serial = allLong.sort((a, b) => b.length - a.length)[0];
-      else {
-        // Look for 10+ digit sequences but skip the barcode line at bottom
-        const all = (text.match(/\b\d{10,15}\b/g) || []);
-        if (all.length) serial = all.sort((a, b) => b.length - a.length)[0];
-      }
-    }
-
-    return { assetTag, serial, modelValue };
-  }
-
-  // ============================================================
-  // FALLBACK — couldn't identify the model. Try generic patterns.
-  // ============================================================
-  for (let i = 0; i < lines.length; i++) {
-    if (/serial/i.test(lines[i])) {
-      for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
-        const valueArea = lines[j].replace(/.*serial\s*(number|no)?\.?:?\s*/i, '');
-        const alphaMatch = valueArea.match(/\b([A-Z]{1,4}\d{6,12})\b/i);
-        if (alphaMatch) { serial = alphaMatch[1].toUpperCase(); break; }
-        const digitMatches = valueArea.match(/\b(\d{8,16})\b/g);
-        if (digitMatches) {
-          serial = digitMatches.sort((a, b) => b.length - a.length)[0];
-          break;
+    } else if (labelType === 'VERIDT') {
+      // Veridt: MC + 8 digits, on row with "Serial"
+      for (let i = 0; i < lines.length; i++) {
+        if (/serial/i.test(lines[i])) {
+          for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
+            const valueArea = lines[j].replace(/.*serial\s*(number|no)?\.?:?\s*/i, '');
+            // MC + 8 digits (with OCR-tolerance — letter prefix gets normalized to MC)
+            const m = valueArea.match(/\b([A-Z]{1,4}\d{6,12})\b/i);
+            if (m) {
+              let s = m[1].toUpperCase().replace(/^[A-Z]+/, 'MC');
+              // Validate length: MC + 8 digits = 10 chars typically
+              if (/^MC\d{6,12}$/.test(s)) {
+                serialCandidates.push({ value: s, score: 100, source: 'veridt-pass' + (pi+1) });
+              }
+            }
+          }
         }
       }
-      if (serial) break;
+      // Veridt fallback: any MC-style serial
+      const allText = p.text;
+      const matches = (allText.match(/\b[A-Z]{1,4}\d{6,12}\b/g) || []);
+      for (const m of matches) {
+        let s = m.toUpperCase().replace(/^[A-Z]+/, 'MC');
+        if (/^MC\d{6,12}$/.test(s)) {
+          serialCandidates.push({ value: s, score: 60, source: 'veridt-fallback' + (pi+1) });
+        }
+      }
+    } else if (labelType === 'MCDEAN_BLUE') {
+      // M.C. Dean blue label: pure digits, typically 14 digits
+      // Anchor on "Serial No" row
+      for (let i = 0; i < lines.length; i++) {
+        if (/serial/i.test(lines[i])) {
+          for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
+            const valueArea = lines[j].replace(/.*serial\s*(number|no)?\.?:?\s*/i, '');
+            const matches = valueArea.match(/\b(\d{10,16})\b/g);
+            if (matches) {
+              for (const m of matches) {
+                const score = 100 + Math.min(m.length, 14) * 2;
+                serialCandidates.push({ value: m, score, source: 'mcdean-row-pass' + (pi+1) });
+              }
+            }
+          }
+        }
+      }
+      // Fallback: any 12-16 digit number anywhere (avoiding obvious barcodes which are below the label)
+      const all = (p.text.match(/\b\d{12,16}\b/g) || []);
+      for (const m of all) {
+        // Lower confidence on 12-digit numbers (could be barcodes)
+        const score = m.length === 14 ? 70 : (m.length >= 13 ? 50 : 30);
+        serialCandidates.push({ value: m, score, source: 'mcdean-fallback' + (pi+1) });
+      }
+    } else {
+      // Unknown label — try both formats
+      for (let i = 0; i < lines.length; i++) {
+        if (/serial/i.test(lines[i])) {
+          for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
+            const valueArea = lines[j].replace(/.*serial\s*(number|no)?\.?:?\s*/i, '');
+            const alphaM = valueArea.match(/\b([A-Z]{1,4}\d{6,12})\b/i);
+            if (alphaM) serialCandidates.push({ value: alphaM[1].toUpperCase(), score: 70, source: 'unknown-alpha-pass' + (pi+1) });
+            const digitM = valueArea.match(/\b(\d{8,16})\b/g);
+            if (digitM) for (const d of digitM) serialCandidates.push({ value: d, score: 60, source: 'unknown-digit-pass' + (pi+1) });
+          }
+        }
+      }
     }
   }
 
-  return { assetTag, serial, modelValue };
+  const serialPick = pickBestCandidate(serialCandidates);
+  debug.push('Serial candidates: ' + JSON.stringify(serialCandidates.map(c => `${c.value}(${Math.round(c.score)})`)));
+  debug.push('Serial picked: ' + (serialPick || 'none'));
+
+  return { assetTag: assetTagPick, serial: serialPick, modelValue, debug: debug.join('\n') };
+}
+
+// Vote-based candidate picking: each candidate's effective score = its score + a frequency bonus
+function pickBestCandidate(candidates) {
+  if (!candidates.length) return null;
+  // Group by value, sum scores
+  const tallies = {};
+  for (const c of candidates) {
+    if (!tallies[c.value]) tallies[c.value] = { value: c.value, totalScore: 0, count: 0 };
+    tallies[c.value].totalScore += c.score;
+    tallies[c.value].count++;
+  }
+  // Sort by (totalScore + count*15)
+  const sorted = Object.values(tallies).sort((a, b) =>
+    (b.totalScore + b.count * 15) - (a.totalScore + a.count * 15)
+  );
+  return sorted[0].value;
 }
 
 function setGreen(id, val) {
@@ -906,7 +877,6 @@ function downloadCSVBlob(name, csv) {
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
-// ============ SAVED FILES ============
 function saveFile(csv, count) {
   const id = 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
   const now = Date.now();
@@ -918,8 +888,7 @@ function saveFile(csv, count) {
 
 function deleteFile(id) {
   savedFiles = savedFiles.filter(f => f.id !== id);
-  updateSavedPill();
-  renderSavedFiles();
+  updateSavedPill(); renderSavedFiles();
 }
 
 function downloadSaved(id) {
@@ -935,21 +904,15 @@ function purgeExpired() {
     updateSavedPill();
     if (document.getElementById('content-saved').classList.contains('active')) renderSavedFiles();
   } else if (document.getElementById('content-saved').classList.contains('active')) {
-    // Just refresh the timer displays
     renderSavedFiles();
   }
 }
-
 setInterval(purgeExpired, 1000);
 
 function updateSavedPill() {
   const pill = document.getElementById('savedPill');
-  if (savedFiles.length) {
-    pill.textContent = savedFiles.length;
-    pill.style.display = 'inline-block';
-  } else {
-    pill.style.display = 'none';
-  }
+  if (savedFiles.length) { pill.textContent = savedFiles.length; pill.style.display = 'inline-block'; }
+  else pill.style.display = 'none';
 }
 
 function fmtTimeLeft(ms) {
@@ -969,8 +932,7 @@ function renderSavedFiles() {
   const now = Date.now();
   list.innerHTML = savedFiles.map(f => {
     const left = f.expiresAt - now;
-    const savedAt = new Date(f.savedAt);
-    const tStr = savedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const tStr = new Date(f.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return `
       <div class="saved-item">
         <div class="saved-info-block">
@@ -985,22 +947,14 @@ function renderSavedFiles() {
   }).join('');
 }
 
-// ============ END SESSION ============
 function finishAndSend() {
   if (!assets.length) { showToast('No assets added yet', 'wrn'); return; }
   const csv = buildCSV();
   const count = assets.length;
-
-  // Save to the saved-files store
   saveFile(csv, count);
-
-  // Trigger immediate download
   const name = 'FAA_Assets_Import_' + new Date().toISOString().slice(0,10) + '.csv';
   downloadCSVBlob(name, csv);
-
   showToast('✓ CSV downloaded — saved for 30 min in Saved Files');
-
-  // Clear the active scan list
   assets = [];
   renderList();
   document.getElementById('countDisplay').textContent = '0';
