@@ -188,7 +188,7 @@
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 44px; height: 20px;
+    width: 50px; height: 20px;
     color: var(--accent);
     transition: left 0.4s ease-out;
     filter: drop-shadow(0 0 6px rgba(0,212,255,0.7));
@@ -303,23 +303,27 @@
   <div class="runway"></div>
   <div class="plane-fly">
     <div class="contrail"></div>
-    <svg viewBox="0 0 200 80" width="100%" height="100%" fill="currentColor">
-      <!-- Boeing 737-style silhouette: long fuselage, swept wings, T-tail -->
-      <!-- Fuselage -->
-      <path d="M 10 40 L 25 36 L 175 36 Q 192 36 195 40 Q 192 44 175 44 L 25 44 Z"/>
-      <!-- Nose cone -->
-      <path d="M 175 36 Q 195 36 198 40 Q 195 44 175 44 Z" opacity="0.95"/>
-      <!-- Main swept wings -->
-      <path d="M 80 40 L 60 18 L 90 22 L 110 38 L 110 42 L 90 58 L 60 62 Z"/>
-      <!-- Tail wings (horizontal stabilizer) -->
-      <path d="M 25 40 L 12 28 L 30 32 L 38 38 L 38 42 L 30 48 L 12 52 Z"/>
-      <!-- Vertical tail fin -->
-      <path d="M 22 36 L 18 22 L 32 22 L 38 36 Z"/>
-      <!-- Engine pods under wings -->
-      <ellipse cx="92" cy="46" rx="6" ry="3" opacity="0.75"/>
-      <ellipse cx="92" cy="34" rx="6" ry="3" opacity="0.75"/>
+    <svg viewBox="0 0 240 90" width="100%" height="100%" fill="currentColor">
+      <!-- Boeing 747 silhouette -->
+      <!-- Main fuselage -->
+      <path d="M 8 48 L 22 44 Q 22 42 25 42 L 200 42 Q 218 42 232 46 Q 234 48 232 50 Q 218 54 200 54 L 25 54 Q 22 54 22 52 L 8 48 Z"/>
+      <!-- Iconic 747 upper deck hump (cockpit + first-class) -->
+      <path d="M 175 42 Q 180 32 195 30 Q 215 30 225 38 Q 228 40 228 42 L 175 42 Z"/>
+      <!-- Nose detail -->
+      <path d="M 220 42 Q 234 42 238 46 Q 234 50 220 50 Z" opacity="0.95"/>
       <!-- Cockpit windows -->
-      <path d="M 178 38 L 184 37 L 184 39 L 178 39 Z" opacity="0.5" fill="#0d1117"/>
+      <path d="M 215 38 L 224 36 L 224 39 L 215 40 Z" opacity="0.4" fill="#0d1117"/>
+      <!-- Main swept wings (large 747 wings) -->
+      <path d="M 95 48 L 70 16 L 105 22 L 138 46 L 138 50 L 105 74 L 70 80 Z"/>
+      <!-- Inboard engines (4 total - 747 has 4) -->
+      <ellipse cx="105" cy="58" rx="7" ry="3.5" opacity="0.85"/>
+      <ellipse cx="125" cy="58" rx="7" ry="3.5" opacity="0.85"/>
+      <ellipse cx="105" cy="38" rx="7" ry="3.5" opacity="0.85"/>
+      <ellipse cx="125" cy="38" rx="7" ry="3.5" opacity="0.85"/>
+      <!-- Horizontal stabilizers (tail wings) -->
+      <path d="M 25 48 L 8 30 L 32 36 L 42 46 L 42 50 L 32 60 L 8 66 Z"/>
+      <!-- Vertical tail fin -->
+      <path d="M 22 42 L 18 18 L 35 18 L 42 42 Z"/>
     </svg>
   </div>
   <div class="intro-text">FAA<span>.</span>SCAN</div>
@@ -366,13 +370,16 @@
         <div class="plane-track"></div>
         <div class="plane-trail" id="planeTrail" style="width:0%;"></div>
         <div class="plane-flying" id="planeFly" style="left:0%;">
-        <svg viewBox="0 0 200 80" width="44" height="20" fill="currentColor">
-          <path d="M 10 40 L 25 36 L 175 36 Q 192 36 195 40 Q 192 44 175 44 L 25 44 Z"/>
-          <path d="M 80 40 L 60 18 L 90 22 L 110 38 L 110 42 L 90 58 L 60 62 Z"/>
-          <path d="M 25 40 L 12 28 L 30 32 L 38 38 L 38 42 L 30 48 L 12 52 Z"/>
-          <path d="M 22 36 L 18 22 L 32 22 L 38 36 Z"/>
-          <ellipse cx="92" cy="46" rx="6" ry="3" opacity="0.75"/>
-          <ellipse cx="92" cy="34" rx="6" ry="3" opacity="0.75"/>
+        <svg viewBox="0 0 240 90" width="50" height="20" fill="currentColor">
+          <path d="M 8 48 L 22 44 Q 22 42 25 42 L 200 42 Q 218 42 232 46 Q 234 48 232 50 Q 218 54 200 54 L 25 54 Q 22 54 22 52 L 8 48 Z"/>
+          <path d="M 175 42 Q 180 32 195 30 Q 215 30 225 38 Q 228 40 228 42 L 175 42 Z"/>
+          <path d="M 95 48 L 70 16 L 105 22 L 138 46 L 138 50 L 105 74 L 70 80 Z"/>
+          <ellipse cx="105" cy="58" rx="7" ry="3.5" opacity="0.85"/>
+          <ellipse cx="125" cy="58" rx="7" ry="3.5" opacity="0.85"/>
+          <ellipse cx="105" cy="38" rx="7" ry="3.5" opacity="0.85"/>
+          <ellipse cx="125" cy="38" rx="7" ry="3.5" opacity="0.85"/>
+          <path d="M 25 48 L 8 30 L 32 36 L 42 46 L 42 50 L 32 60 L 8 66 Z"/>
+          <path d="M 22 42 L 18 18 L 35 18 L 42 42 Z"/>
         </svg>
       </div>
         <div class="progress-status" id="progressStatus">PROCESSING...</div>
@@ -402,6 +409,7 @@
           <select class="field-value" id="fieldModel">
             <option value="">— Select model —</option>
             <option value="'UTR-9202ABTRLNL">'UTR-9202ABTRLNL</option>
+            <option value="'UTR-9216ABTRLNL">'UTR-9216ABTRLNL</option>
             <option value="'LNL-1320-S3">'LNL-1320-S3</option>
             <option value="'900W2036-QXYON">'900W2036-QXYON</option>
           </select>
@@ -659,33 +667,19 @@ async function processImage(dataUrl) {
 }
 
 // ============ PARSE LABEL ============
-// Known part numbers — used for auto-detect and dropdown matching
-// Listed from MOST specific to LEAST specific so longer matches win first
-const KNOWN_PARTS = [
-  { keyword: 'UTR-9202ABTRLNL', value: "'UTR-9202ABTRLNL", aliases: ['UTR-9202ABTRLNL', 'UTR9202ABTRLNL', 'UTR-9202'] },
-  { keyword: 'LNL-1320-S3',     value: "'LNL-1320-S3",     aliases: ['LNL-1320-S3', 'LNL1320S3', 'LNL-1320'] },
-  { keyword: '900W2036-QXYON',  value: "'900W2036-QXYON",  aliases: ['900W2036-QXYON', '900W2036QXYON', '900W2036'] }
-];
+// Detection runs in this order. Each branch is fully isolated — changes to one
+// branch CANNOT affect another. Add new models as their own branch.
+//
+// BRANCH 1 — Veridt 900W2036 (DO NOT TOUCH — works perfectly)
+// BRANCH 2 — UTR-9216 / UTR-9202 / LNL-1320 (M.C. Dean blue label format)
+// BRANCH ? — fallback for unknown labels
 
 function parseLabel(text) {
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   const upperText = text.toUpperCase();
   let assetTag = null, serial = null, modelValue = null;
 
-  // -------- PART NUMBER DETECTION --------
-  // Match against ALL aliases (longest first) — handles "UTR-9202", "900W2036", etc.
-  // Build a flat list of {alias, value} sorted by alias length descending
-  const aliasIndex = [];
-  for (const p of KNOWN_PARTS) {
-    for (const a of p.aliases) aliasIndex.push({ alias: a.toUpperCase(), value: p.value });
-  }
-  aliasIndex.sort((a, b) => b.alias.length - a.alias.length);
-
-  for (const { alias, value } of aliasIndex) {
-    if (upperText.includes(alias)) { modelValue = value; break; }
-  }
-
-  // -------- ASSET TAG --------
+  // -------- ASSET TAG (universal — same sticker on all assets) --------
   // Always 6 digits under "Property of FAA" sticker
   for (let i = 0; i < lines.length; i++) {
     if (/property\s*of\s*faa/i.test(lines[i]) || /property/i.test(lines[i])) {
@@ -710,31 +704,106 @@ function parseLabel(text) {
     }
   }
 
-  // -------- SERIAL NUMBER --------
-  // Two flavors: digits-only (e.g. 82162523700767) OR alphanumeric starting with MC (e.g. MC08250256)
-  // Force any letter-prefixed serial to use "MC" since OCR often misreads M as N, H, IY, etc.
-  const isVeridtSerial = (s) => /^[A-Z]{1,4}\d{6,12}$/i.test(s);
+  // ============================================================
+  // BRANCH 1 — VERIDT 900W2036 LABEL  (DO NOT MODIFY — works perfectly)
+  // Identified by:  text contains "VERIDT" or "900W2036"
+  // Serial format:  MC + 8 digits (e.g. MC08250256)
+  // ============================================================
+  if (upperText.includes('VERIDT') || upperText.includes('900W2036')) {
+    modelValue = "'900W2036-QXYON";
 
-  // Strategy 1: scan label-style lines for "Serial" or "Serial Number" keywords
+    // Find serial after "Serial Number:" label
+    for (let i = 0; i < lines.length; i++) {
+      if (/serial/i.test(lines[i])) {
+        for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
+          const valueArea = lines[j].replace(/.*serial\s*(number|no)?\.?:?\s*/i, '');
+          if (!valueArea) continue;
+          const alphaMatch = valueArea.match(/\b([A-Z]{1,4}\d{6,12})\b/i);
+          if (alphaMatch) {
+            let raw = alphaMatch[1].toUpperCase();
+            // Force letter prefix to MC (handle OCR misreads of M)
+            raw = raw.replace(/^[A-Z]+/, 'MC');
+            serial = raw;
+            break;
+          }
+        }
+        if (serial) break;
+      }
+    }
+    // Fallback: scan whole text for MC-style serial
+    if (!serial) {
+      const alphaAll = (text.match(/\b[A-Z]{1,4}\d{6,12}\b/g) || []);
+      if (alphaAll.length) {
+        let s = alphaAll.sort((a, b) => b.length - a.length)[0].toUpperCase();
+        s = s.replace(/^[A-Z]+/, 'MC');
+        serial = s;
+      }
+    }
+
+    return { assetTag, serial, modelValue };
+  }
+
+  // ============================================================
+  // BRANCH 2 — M.C. DEAN BLUE LABEL  (UTR-9216, UTR-9202, LNL-1320, etc.)
+  // Identified by:  has "Part No" label AND value matches a known prefix
+  // Serial format:  pure digits, typically 14 digits (e.g. 82162523700767)
+  // ============================================================
+  const MC_DEAN_PARTS = [
+    { match: 'UTR-9216',     value: "'UTR-9216ABTRLNL" },
+    { match: 'UTR9216',      value: "'UTR-9216ABTRLNL" },
+    { match: 'UTR-9202',     value: "'UTR-9202ABTRLNL" },
+    { match: 'UTR9202',      value: "'UTR-9202ABTRLNL" },
+    { match: 'LNL-1320-S3',  value: "'LNL-1320-S3"     },
+    { match: 'LNL1320S3',    value: "'LNL-1320-S3"     },
+    { match: 'LNL-1320',     value: "'LNL-1320-S3"     }
+  ];
+  // Sort longest match first so UTR-9216 matches before UTR-9
+  MC_DEAN_PARTS.sort((a, b) => b.match.length - a.match.length);
+
+  for (const p of MC_DEAN_PARTS) {
+    if (upperText.includes(p.match)) { modelValue = p.value; break; }
+  }
+
+  if (modelValue) {
+    // M.C. Dean blue-label serial: digit-only, on the row labeled "Serial No"
+    for (let i = 0; i < lines.length; i++) {
+      if (/serial/i.test(lines[i])) {
+        for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
+          // Strip the "Serial No." label
+          const valueArea = lines[j].replace(/.*serial\s*(number|no)?\.?:?\s*/i, '');
+          // Pure digit sequence, prefer longer ones (10-16 digits)
+          const digitMatches = valueArea.match(/\b(\d{10,16})\b/g);
+          if (digitMatches) {
+            serial = digitMatches.sort((a, b) => b.length - a.length)[0];
+            break;
+          }
+        }
+        if (serial) break;
+      }
+    }
+    // Fallback: longest pure digit sequence in whole text (avoid PO numbers and barcodes)
+    if (!serial) {
+      const allLong = (text.match(/\b\d{12,16}\b/g) || []);
+      if (allLong.length) serial = allLong.sort((a, b) => b.length - a.length)[0];
+      else {
+        // Look for 10+ digit sequences but skip the barcode line at bottom
+        const all = (text.match(/\b\d{10,15}\b/g) || []);
+        if (all.length) serial = all.sort((a, b) => b.length - a.length)[0];
+      }
+    }
+
+    return { assetTag, serial, modelValue };
+  }
+
+  // ============================================================
+  // FALLBACK — couldn't identify the model. Try generic patterns.
+  // ============================================================
   for (let i = 0; i < lines.length; i++) {
     if (/serial/i.test(lines[i])) {
-      // Check this line + next 2 lines (Veridt label may have value on next line)
-      for (let j = i; j <= Math.min(i + 2, lines.length - 1); j++) {
-        // Strip the "Serial Number:" or "Serial No:" label
+      for (let j = i; j <= Math.min(i + 1, lines.length - 1); j++) {
         const valueArea = lines[j].replace(/.*serial\s*(number|no)?\.?:?\s*/i, '');
-        if (!valueArea) continue;
-
-        // Try alphanumeric serial first (1-4 letters + 6-12 digits)
         const alphaMatch = valueArea.match(/\b([A-Z]{1,4}\d{6,12})\b/i);
-        if (alphaMatch) {
-          let raw = alphaMatch[1].toUpperCase();
-          // Force letter prefix to MC (handle OCR misreads of M)
-          raw = raw.replace(/^[A-Z]+/, 'MC');
-          serial = raw;
-          break;
-        }
-
-        // Otherwise look for a long digit sequence
+        if (alphaMatch) { serial = alphaMatch[1].toUpperCase(); break; }
         const digitMatches = valueArea.match(/\b(\d{8,16})\b/g);
         if (digitMatches) {
           serial = digitMatches.sort((a, b) => b.length - a.length)[0];
@@ -744,24 +813,6 @@ function parseLabel(text) {
       if (serial) break;
     }
   }
-
-  // Fallback: search whole text
-  if (!serial) {
-    const alphaAll = (text.match(/\b[A-Z]{1,4}\d{6,12}\b/g) || []);
-    if (alphaAll.length) {
-      let s = alphaAll.sort((a, b) => b.length - a.length)[0].toUpperCase();
-      // Force MC prefix
-      s = s.replace(/^[A-Z]+/, 'MC');
-      serial = s;
-    } else {
-      const allNumbers = (text.match(/\b\d{10,15}\b/g) || []);
-      if (allNumbers.length) serial = allNumbers.sort((a, b) => b.length - a.length)[0];
-    }
-  }
-
-  // If we matched the Veridt 900W2036 model but our serial looks like pure digits,
-  // it's probably wrong — the Veridt always uses MC + 8 digits format
-  // Don't override though — let user verify
 
   return { assetTag, serial, modelValue };
 }
